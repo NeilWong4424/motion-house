@@ -1,0 +1,19 @@
+{
+  "name": "mybola-launch",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts MyBolaV4 out/mybola.mp4",
+    "still": "remotion still src/index.ts MyBolaV4 out/frame.png"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
+    "@remotion/cli": "4.0.290",
+    "@sparticuz/chromium": "^149.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.290"
+  }
+}
