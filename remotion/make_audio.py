@@ -5,7 +5,9 @@ import wave
 
 
 SR = 48000
-DUR = 34.4
+DUR = 46.2  # full length of the current v7 cut (~46.1s). SFX cue times in sfx()
+# below are still aligned to the older 34.4s layout — realign to v7 scene
+# boundaries as a follow-up (see CLAUDE.md audio note / backlog).
 
 
 def write_wav(path: str, data: np.ndarray) -> None:
