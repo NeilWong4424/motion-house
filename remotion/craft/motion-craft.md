@@ -60,10 +60,11 @@ Type *is* the graphic in most motion graphics. Treat it as image, not text.
 ## Colour
 
 - **Palette by role, not by name.** Ask the design language for `accent`, never
-  "the coral one". That's what makes a scene reusable across brands.
+  the specific hue. That's what makes a scene reusable across brands.
 - **One accent, used rarely.** An accent used everywhere is just a second body
-  colour. Its power is scarcity — see MyBola's rule that coral never enters the
-  phone.
+  colour. Its power is scarcity — the strongest design languages reserve the
+  accent for one layer (e.g. the storyteller, never the product) so it always
+  means something when it appears.
 - **Contrast is hierarchy.** `fg` for the thing that matters, `muted` for support.
   If everything is full-contrast, nothing is important.
 - **Dark ≠ premium.** A dark palette with flat lighting looks cheaper than a light
@@ -94,29 +95,30 @@ Real product films cut *within* a scene: establish wide → cut in on the thing 
 typed → hold on the result → pull back. Use `<Shot>` (`shared/motion/shot.tsx`) to
 write that breakdown as a shot list.
 
-- **The subject NEVER moves. The camera moves.** If your device mockup is scaling,
-  that's a prop animating itself. It reads as cheap — and if each scene mounts its
-  own copy, the zoom resets at every cut and the device visibly *pumps* smaller.
-  That exact bug shipped here for months behind a comment claiming the opposite.
-- **分镜 is NOT "more shots". Confidence is holding.** Measured against the
-  Dispatch reference: it makes **6 hard cuts in 36s (~1 per 6s)** and uses only
-  **two framings** for the entire film. It never punches in. What looks like
-  cutting is the CONTENT changing inside a locked frame — a dialog opens, a
-  window swaps, a cursor moves — while the camera sits perfectly still.
-  A pass here that added 3-4 punch-ins per scene hit 19 cuts in 56s, twice the
-  reference's rate, and read as choppy rather than premium. Default to ONE
-  static framing per scene, held 5-8s, and let the content carry the beat.
+- **The subject NEVER moves. The camera moves.** If a mockup or device is
+  scaling, that's a prop animating itself. It reads as cheap — and if each scene
+  mounts its own copy, the zoom resets at every cut and the subject visibly
+  *pumps* smaller between scenes. Mount the subject once, above the scenes.
+- **分镜 is NOT "more shots". Confidence is holding.** The best product films
+  hold a locked frame and let the *content* change inside it — a dialog opens, a
+  window swaps, a cursor moves — rather than punching in. A useful discipline:
+  measure your reference and count its cuts and its distinct framings. Premium
+  work tends toward **~1 cut per 5–7s and only two or three framings for a whole
+  film**; adding 3–4 punch-ins per scene reads as choppy, not premium. Default to
+  ONE static framing per scene, held 5–8s, and let the content carry the beat.
+  (Record the numbers you measured in the *product's* notes, not here.)
 - **Cut, don't drift.** When you do change framing, a cut is free; a move costs
   time. Reserve `via: "move"` for the one or two moments where the travel itself
   means something (a reveal landing, a payoff).
-- **A held frame is not a dead frame.** Measured at a low threshold the reference
-  has *more* visual change than our cuts do — it holds the camera but something
-  is always arriving, typing, or updating. Static camera, live content.
-- **Mind the subject's edges.** Punching past the point where the device leaves
-  frame stops reading as "an app on a phone" and becomes a bare UI — you lose the
-  two-layer premise. For a 902px phone in a 1080px frame the limit is 1080/902 =
-  **1.19**, so gentle punches (~1.15) are the whole useful range. If you need a
-  harder punch, **stage the subject smaller first** — never crop it away.
+- **A held frame is not a dead frame.** A held camera over live content — something
+  always arriving, typing, or updating — has *more* real visual change than a
+  slow drift over a static layout. Static camera, live content.
+- **Mind the subject's edges.** Punching past the point where a framed subject
+  (a device, a window) leaves frame stops reading as "an app on a phone" and
+  becomes a bare UI — you lose the staging premise. The punch-in ceiling is
+  `frame_size / subject_size`: a subject filling most of the frame leaves almost
+  no room, so gentle punches are the whole useful range. If you need a harder
+  punch, **stage the subject smaller first** — never crop it away.
 - **Push-ins are slow.** If the zoom is noticeable frame to frame, it's too fast.
 - **Parallax is subtle.** `depth` 0.85 or 1.15. Beyond that it's a PowerPoint effect.
 
@@ -138,15 +140,17 @@ write that breakdown as a shot list.
 Audio isn't decoration — it's half the perceived production value.
 
 - Music defines pacing. Cut to it; don't lay it under afterwards.
-- **Music is a bed, not a layer.** Measured: the reference sits at **mean −37 dB,
-  max −18 dB**. Our first cuts ran −21/−4 — ~15 dB hot, peaking near clipping —
-  and that alone made them feel cheap. Mix music at `volume=0.05`, SFX at
-  `volume=0.22`, and verify with `volumedetect`.
+- **Music is a bed, not a layer.** Premium films keep the music *far* below where
+  an amateur mix puts it — a bed sits low with generous headroom, never near
+  clipping. A hot mix (loud, peaking) is one of the fastest tells of cheap work.
+  Measure your reference's loudness with `volumedetect`, set your bed and SFX to
+  match it, and record the exact targets in the *product's* audio notes — the
+  numbers are per-film, the principle is universal.
 - **Synthesized music has a ceiling.** A four-chord sine pad is filler and sounds
   like it. If you must synthesize, compose properly: a real progression with
   voice leading, struck timbres with inharmonic partials, an arrangement that
-  lifts at the film's turn (see `products/mybola/audio/score.py`). Licensed
-  production music beats the best synthesis — if it exists, use it.
+  lifts at the film's turn. Licensed production music beats the best synthesis —
+  if it exists, use it.
 - SFX must land **on** the frame of the event, not near it. A pop 3 frames late
   reads as broken.
 - The score should cover the full cut — audio ending early is worse than no audio.
@@ -170,6 +174,14 @@ You cannot judge motion from code. **Render, extract frames, and look.**
 **Check mid-flight frames, not just settled ones.** A reveal that looks fine at rest
 can be broken in motion — and a frame taken 8 frames after a dip peak will make a
 working transition look absent. Sample the frame the effect actually peaks on.
+
+**Measure the reference; don't eyeball it.** When you set a target from a reference
+film — shadow depth, cut rate, mix loudness, a colour — take the number off the
+actual pixels/audio, don't trust what you think you saw in a compressed recording.
+Eyeballing invents things that aren't there: a "grid texture" that measures as JPEG
+noise, a "gradient wash" over a field that measures perfectly flat. Every
+per-reference number you rely on is a hypothesis until you've measured it — and it
+belongs in the *product's* notes, not in this doc.
 
 **Renders are not bit-reproducible.** The same unchanged code gives a different md5
 and SSIM ≈0.9999 per render. Judge by eye; treat SSIM ≥ ~0.9997 as renderer noise,

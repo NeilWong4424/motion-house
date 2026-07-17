@@ -13,6 +13,14 @@ export const wa = {
 };
 const WAF = "'Plus Jakarta Sans', 'Helvetica Neue', sans-serif";
 
+// In-text confirmation check. Unicode ✓ is banned in compositions (headless
+// Chrome renders tofu boxes), so confirmations use this glyph instead.
+export const WACheck: React.FC = () => (
+  <svg width="30" height="30" viewBox="0 0 24 24" style={{ verticalAlign: "-5px", margin: "0 2px" }}>
+    <path d="M20 6 9 17l-5-5" stroke={wa.green} strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const Ticks: React.FC<{ read?: boolean }> = ({ read = true }) => (
   <svg width="34" height="22" viewBox="0 0 16 11" style={{ marginLeft: 6 }}>
     <path d="M11.07 0.65 6.4 5.32 4.55 3.47 3.5 4.52 6.4 7.42 12.12 1.7Z" fill={read ? wa.tick : wa.sub} />

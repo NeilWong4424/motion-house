@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "studio": "remotion studio src/index.ts",
+    "qc": "node scripts/qc.mjs",
     "render": "remotion render src/index.ts",
     "still": "remotion still src/index.ts",
     "render:mybola-v4": "remotion render src/index.ts MyBolaV4 out/MyBolaV4.mp4",

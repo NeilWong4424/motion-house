@@ -1,6 +1,93 @@
-# Phase 2 — Polish roadmap: closing the gap to the Dispatch reference
+# MyBola — production notes & Dispatch-reference work-log
 
-Status: **planned, not started.** Six steps, ordered cheapest-highest-payoff first.
+**Product-specific.** This is MyBola's own reference analysis and polish log — the
+measured gap to Anthropic's "Dispatch" launch film, step by step. The *universal*
+craft rules it taught (measure your reference before building; hold the camera;
+music as a quiet bed) live in `craft/motion-craft.md`; this file keeps only the
+MyBola-and-Dispatch specifics — exact pixel measurements, scene constants, the
+coral/phone rule, the Bahasa copy. When starting a new product, write its own
+notes file like this one; don't generalise from these numbers.
+
+MyBola is a Malaysian football academy management SaaS. Its current cut is v7
+(~49s, composition id `MyBolaV4`). The "warm editorial" look
+(cream/serif/coral, the two-layer phone rule) lives in code in
+`products/mybola/design.ts` — it is **one design language among many**, not the
+house style. The rules in this section describe *that* language; nothing in
+`shared/` assumes them.
+
+---
+
+## Design language — the two-layer rule
+
+1. **Narration layer** — cream canvas `#E8E0D3`, ink `#1F1B16`, coral `#C15F3C`,
+   Playfair serif. Greeting, punctuation cards (with letterspaced MYBOLA kicker),
+   and the KINI DILANCARKAN close live here. Coral NEVER appears inside the phone —
+   the accent belongs to the storyteller, not the product.
+2. **Product layer** — everything inside `PhoneFrame`: the real dark app UI.
+   The phone NEVER moves; only the camera zooms (scale on the whole frame).
+
+## Code-exact UI — the real Flutter source
+
+The universal rule (any on-screen product UI matches its real source exactly)
+lives in `CLAUDE.md`. For MyBola, every UI figure inside the phone must match the
+real Flutter app source at `../../project-4/flutter/lib/` (relative to this
+repo's parent):
+
+- Tokens: `lib/core/app_theme.dart` — primary #0091FF, secondary #1C1C1E,
+  border #1A1A1A, success #30D158, error #FF4245, tertiary 33% white.
+  Text roles: body 16/400, title 17/500, label 15/500, meta 13/500 tertiary.
+- Bubbles: `lib/widgets/media/message_bubble.dart` — AI = primary @20% alpha,
+  corners 12/12/4(bl)/12; user = secondary, 12/12/12/4(br); padding 10;
+  caption "Pengurus · h:mm a" in meta below.
+- Omnibar: `lib/portal/chat/chat_omnibar/chat_omnibar.dart` — GlassShell
+  (radius 16, blur, margin 10), row: attach, mic, slash-chip 15x15, field
+  (hint "Semua urusan bermula di sini...", processing "Pengurus sedang memproses
+  permintaan anda…"), send 32x32 arrow-RIGHT (blue when text present).
+- Action sheet: `lib/portal/chat/chat_omnibar/chat_action_card.dart` —
+  ActionSummaryCard (title/subtitle/field rows) + numbered DesktopButtons
+  (h28, radius 6, "1. Kemaskini" primary, "2. Padam" error, "0. Batal dan
+  kembali" secondary). Transcript dims to 0.2 behind it.
+- Scale: 390pt logical width → 1080px content = 2.7x (`SC` in shared/ui/theme.tsx).
+- WhatsApp scene: exact WA dark theme (bg #0B141A, bar #202C33, out #005C4B,
+  ticks #53BDEB, send circle #00A884).
+
+## Copy
+
+All on-screen copy in MyBola videos is Bahasa Malaysia. AI label is "Pengurus".
+Demo cast: coach ("Anda"), player Adam Haris (U-12), parent Puan Aida. Times:
+admin 9:41 AM, parent 9:02 PM — status bar clock must match bubble timestamps.
+
+## Audio — score & mix
+
+`audio/make_audio.py` synthesizes the score (see `score.py`) plus UI SFX (typing
+taps before sends, send/receive pops). **Per-video**: each entry in its `VIDEOS`
+dict carries that cut's `duration` and cue table, so a new video adds a dict
+entry rather than editing the synthesis code. Convenience: `npm run audio:mybola-v4`
+→ `out/audio/MyBolaV4-{music,sfx}.wav`. The universal mux command is in `CLAUDE.md`.
+
+**Measured mix targets** (against the Dispatch reference): music sits at
+**mean −37 dB, max −18 dB**. Our first cuts ran −21/−4 — ~15 dB hot, peaking near
+clipping, a large part of why they felt cheap. Mix music at `volume=0.05`, SFX at
+`volume=0.22`; verify `volumedetect` reports mean ≈ −37 / max ≈ −18 dB, with tap
+windows still peaking ~−19 dB so SFX reads above the bed.
+
+**The score is written to the cut.** `score.py` is a FREE-TIME score — no drum
+pulse, no bar grid — because this edit's scene gaps are 3.33/6/7s and 3.33s isn't
+a musical duration at any tempo (best fit across 56-120bpm still drifted ~58ms per
+cut; a grid would fight the picture). Each `VIDEOS` entry carries a `cuts` list —
+the film's actual scene-change times — and chord changes land exactly on them
+(verified 10/10 within 50ms). `payoff_at` marks the film's turn: harmony lifts to
+the relative major and the glass bell sounds ONCE. **Recompute `cuts` whenever a
+scene length changes**, or the score drifts off the edit. Instruments match the
+design language: felt piano (voice), bowed strings (bed), upright bass (floor),
+glass bell (the accent, used once — scarcity, exactly like coral in the visual
+layer). No drums: a pulse would make it a promo.
+
+---
+
+## Polish work-log
+
+Status: steps 1–2 shipped, 3–6 open. Ordered cheapest-highest-payoff first.
 Each step is independently shippable — render, look, commit, move on.
 
 ## Why this exists

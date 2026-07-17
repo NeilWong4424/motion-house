@@ -5,7 +5,7 @@ import { FadeIn } from "../../../shared/motion/transitions";
 import { EASE } from "../../../shared/motion/easing";
 import { ActionSheet, Omnibar, RealBubble } from "../../../shared/ui/chat";
 import { StatusBar } from "../../../shared/ui/phone";
-import { WABubble, WADoc, WAScreen } from "../../../shared/ui/whatsapp";
+import { WABubble, WACheck, WADoc, WAScreen, wa } from "../../../shared/ui/whatsapp";
 import { defineVideo } from "../../../shared/engine/types";
 import { AppScreen, PhoneFrame } from "../ui/phone";
 import { MetricList, RankedBarChart } from "../ui/charts";
@@ -154,10 +154,10 @@ const P2 = "Nak order jersi home saiz M untuk Adam";
 const SceneC: React.FC = () => (
   <WAScreen typedText={P2} startFrame={8} charsPerFrame={0.8} sentAtFrame={60}>
     <StatusBar time="9:02" light />
-    <WABubble mine atFrame={60} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>{P2}</span></WABubble>
-    <WABubble atFrame={105} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>Pesanan disahkan — Jersi Home (M), RM65. Bil dihantar ke akaun anda.</span></WABubble>
+    <WABubble mine atFrame={60} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: wa.text, lineHeight: 1.4 }}>{P2}</span></WABubble>
+    <WABubble atFrame={105} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: wa.text, lineHeight: 1.4 }}>Pesanan disahkan — Jersi Home (M), RM65. Bil dihantar ke akaun anda.</span></WABubble>
     <WABubble mine atFrame={168} time="9:04 PM" maxWidth={860}><WADoc name="resit_bank.pdf" caption="Dah bayar yuran Jun" /></WABubble>
-    <WABubble atFrame={230} time="9:04 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>Resit disahkan ✓ Yuran Jun selesai. Terima kasih, Puan Aida!</span></WABubble>
+    <WABubble atFrame={230} time="9:04 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: wa.text, lineHeight: 1.4 }}>Resit disahkan <WACheck /> Yuran Jun selesai. Terima kasih, Puan Aida!</span></WABubble>
   </WAScreen>
 );
 
@@ -167,7 +167,7 @@ const SceneC: React.FC = () => (
 // ---------- Act 3: the admin dashboard, on the phone ----------
 // The app really ships a mobile layout (_MobileLayout, <953px): rail and sidebar
 // drop away and the routed page fills the screen. So the owner's dashboard is
-// shown natively rather than as a shrunken desktop � code-exact AND readable in
+// shown natively rather than as a shrunken desktop � code-exact AND readable in
 // 9:16. Same PhoneFrame as Acts 1-2, so the film keeps one visual grammar.
 //
 // Figures tie to Act 1: 28 bills sent, 3 unpaid at RM80 = RM240 outstanding, 11%.

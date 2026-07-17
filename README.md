@@ -1,8 +1,10 @@
 # Motion graphics studio
 
-Text to motion graphic. You describe the video; **Claude Code directs it** —
-interviews the brief, proposes a design language, agrees a storyboard, builds it,
-then renders and critiques its own frames until it's worth shipping.
+Text to motion graphic. You describe the video; **Claude Code is the studio** —
+it researches the subject, forms its own creative direction, builds the film,
+puts it through QC and a cold creative-director review, then delivers a finished
+cut with a director's statement. You give notes on delivered work, like a client
+with an agency — not approvals on palettes and beat sheets.
 
 Built as code (Remotion), so every frame is version-controlled, diffable, and
 re-renderable. Any style, any format — launch films, explainers, teasers, stings.
@@ -18,9 +20,11 @@ claude
 > /video
 ```
 
-Then answer the questions. Claude gates each stage, so you approve the look and the
-storyboard before a frame gets built. Plain chat works too — "make me a 30s teaser
-for X" runs the same flow.
+Give it the brief and let it work. It asks only for facts it can't research
+(product claims, licensing) — everything creative is its call, defended in the
+director's statement at delivery. Plain chat works too — "make me a 30s teaser
+for X" runs the same flow. Give notes on the delivered cut; revisions are part
+of the job.
 
 ## Contents
 
@@ -70,7 +74,6 @@ remotion/src/
       videos/      one file per cut, each exporting a VideoDef
       audio/       per-video music + SFX synth
       index.ts     this product's video list
-  legacy/        v3-era code, still renderable, not on the shared primitives
 ```
 
 Formats: `PORTRAIT` (9:16), `LANDSCAPE` (16:9), `SQUARE`, `CINEMA` (21:9) — spread
@@ -123,7 +126,7 @@ them in the design language.
 
 ## Rules that matter (Claude Code reads these from remotion/CLAUDE.md)
 
-- **Read `remotion/docs/03-motion-craft.md`** — the quality bar as concrete rules
+- **Read `remotion/craft/motion-craft.md`** — the quality bar as concrete rules
 - Never hardcode a hex or font in a scene; ask the design language
 - Whenever a real product's UI is on screen, it must match that product's real
   source exactly — no invented cards
@@ -135,9 +138,9 @@ them in the design language.
 
 ## Docs
 
-- `remotion/docs/03-motion-craft.md` — how to make it look expensive: timing,
-  type, colour, depth, camera, transitions, and the critique loop
-- `remotion/docs/02-polish-roadmap.md` — MyBola's six-step plan to close the gap to
-  the Dispatch reference: texture & depth, evidence bubbles, multi-device, cursor,
-  spring tuning, real Axiforma
-- `.claude/skills/video/SKILL.md` — the `/video` director workflow
+- `remotion/craft/motion-craft.md` — the universal craft bar: timing, type,
+  colour, depth, camera, transitions, and the critique loop. Product-neutral.
+- `remotion/src/products/mybola/NOTES.md` — MyBola's own reference analysis and
+  polish log (an example of how each product keeps its specifics with itself)
+- `.claude/skills/video/SKILL.md` — the `/video` studio workflow
+- `.claude/agents/creative-director.md` — the cold-review agent

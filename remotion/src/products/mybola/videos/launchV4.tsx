@@ -5,7 +5,7 @@ import { ActionSheet, Omnibar, RealBubble } from "../../../shared/ui/chat";
 import { StatusBar } from "../../../shared/ui/phone";
 import { AppScreen, PhoneFrame } from "../ui/phone";
 import { BilDeskPage } from "../ui/desktop";
-import { WABubble, WADoc, WAScreen } from "../../../shared/ui/whatsapp";
+import { WABubble, WACheck, WADoc, WAScreen, wa } from "../../../shared/ui/whatsapp";
 import { defineVideo } from "../../../shared/engine/types";
 import { ui, uiText } from "../appTheme";
 import { CORAL, CREAM, INK, KICKER, LAUNCH_BADGE, TAGLINE, WORDMARK } from "../brand";
@@ -138,10 +138,10 @@ const P2 = "Nak order jersi home saiz M untuk Adam";
 const SceneC: React.FC = () => (
   <WAScreen typedText={P2} startFrame={8} charsPerFrame={0.8} sentAtFrame={60}>
     <StatusBar time="9:02" light />
-    <WABubble mine atFrame={60} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>{P2}</span></WABubble>
-    <WABubble atFrame={105} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>Pesanan disahkan — Jersi Home (M), RM65. Bil dihantar ke akaun anda.</span></WABubble>
+    <WABubble mine atFrame={60} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: wa.text, lineHeight: 1.4 }}>{P2}</span></WABubble>
+    <WABubble atFrame={105} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: wa.text, lineHeight: 1.4 }}>Pesanan disahkan — Jersi Home (M), RM65. Bil dihantar ke akaun anda.</span></WABubble>
     <WABubble mine atFrame={168} time="9:04 PM" maxWidth={860}><WADoc name="resit_bank.pdf" caption="Dah bayar yuran Jun" /></WABubble>
-    <WABubble atFrame={230} time="9:04 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>Resit disahkan ✓ Yuran Jun selesai. Terima kasih, Puan Aida!</span></WABubble>
+    <WABubble atFrame={230} time="9:04 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: wa.text, lineHeight: 1.4 }}>Resit disahkan <WACheck /> Yuran Jun selesai. Terima kasih, Puan Aida!</span></WABubble>
   </WAScreen>
 );
 
