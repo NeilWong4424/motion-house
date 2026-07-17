@@ -66,6 +66,28 @@ VIDEOS: dict[str, dict] = {
             (880, 0.30, 60.30),  # bil -> ahli
         ],
     },
+    # Parent onboarding — cues derived from videos/parentOnboarding.tsx.
+    # Taps land on the press frame, sheet pops on the slide-up.
+    "MyBolaParent": {
+        "duration": 56.4,  # timeline is 56.23s
+        "typing": [
+            (9.17, 9.90, 11),   # phone number entered
+            (18.30, 18.97, 11), # display name entered
+        ],
+        "pops": [
+            (700, 0.45, 6.50),   # tap "Log masuk dengan Google"
+            (700, 0.45, 13.50),  # tap "Seterusnya"
+            (700, 0.45, 22.20),  # tap "Selesai"
+            (880, 0.50, 24.37),  # Adam's card lands — the link working
+            (520, 0.40, 30.70),  # sesi sheet up
+            (700, 0.45, 33.37),  # tap "Rekod Kehadiran"
+            (520, 0.40, 36.70),  # bil sheet up
+            (700, 0.50, 39.97),  # tap "Bayar Sekarang"
+            (520, 0.40, 43.70),  # kedai sheet up
+            (620, 0.35, 45.03),  # pick size M
+            (700, 0.50, 47.30),  # tap "Beli Sekarang"
+        ],
+    },
 }
 
 
