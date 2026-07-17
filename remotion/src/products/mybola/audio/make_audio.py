@@ -1,13 +1,43 @@
-"""Synthesize background music bed and UI sound effects for the MyBola launch video."""
+"""Synthesize the background music bed and UI sound effects for MyBola videos.
+
+Per-video: each entry in VIDEOS carries that cut's length and SFX cue table, so a
+new video adds a dict entry rather than editing the synthesis code.
+
+    python make_audio.py MyBolaV4 --out out/audio
+
+writes <out>/<VideoId>-music.wav and <out>/<VideoId>-sfx.wav.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
 
 import numpy as np
 import wave
 
-
 SR = 48000
-DUR = 46.2  # full length of the current v7 cut (~46.1s). SFX cue times in sfx()
-# below are still aligned to the older 34.4s layout — realign to v7 scene
-# boundaries as a follow-up (see CLAUDE.md audio note / backlog).
+
+
+# =============================================================================
+# Per-video config
+# =============================================================================
+# duration: seconds of audio to synthesize; must cover the full cut.
+# typing:   (start, end[, rate]) bursts of keyboard taps before a send.
+# pops:     (freq, vol, at) send/receive blips.
+#
+# NOTE: MyBolaV4's cue times below were authored against the older 34.4s layout
+# and have NOT been realigned to the current ~46.1s v7 scene boundaries — the
+# taps/pops no longer land on their sends. Realigning them is a tracked
+# follow-up; `duration` is correct so the music bed covers the whole video.
+VIDEOS: dict[str, dict] = {
+    "MyBolaV4": {
+        "duration": 46.2,
+        "typing": [(5.35, 5.80, 11), (7.00, 8.10, 9), (12.70, 13.12, 11), (20.05, 20.30, 11)],
+        "pops": [(700, 0.5, 5.83), (520, 0.45, 8.33), (520, 0.45, 10.67), (700, 0.5, 13.17),
+                 (700, 0.45, 20.33), (520, 0.42, 21.00), (880, 0.35, 29.4)],
+    },
+}
 
 
 def write_wav(path: str, data: np.ndarray) -> None:
@@ -47,7 +77,7 @@ def chord(freqs: list[float], dur: float, vol: float = 1.0) -> np.ndarray:
     return out
 
 
-def music() -> np.ndarray:
+def music(dur: float) -> np.ndarray:
     """Warm four-chord pad progression covering the full video with fades."""
     F3, A3, C4, E4 = 174.61, 220.0, 261.63, 329.63
     G3, B3, D4 = 196.0, 246.94, 293.66
@@ -57,11 +87,11 @@ def music() -> np.ndarray:
     Gmaj = [G3, B3, D4, 392.0]
     prog = [Fmaj7, Cmaj, Am, Gmaj]
     bar = 4.4
-    total = int(DUR * SR)
+    total = int(dur * SR)
     out = np.zeros(total)
     t0 = 0.0
     i = 0
-    while t0 < DUR:
+    while t0 < dur:
         start = int(t0 * SR)
         c = chord(prog[i % 4], bar + 0.9, vol=0.9)
         e1 = min(start + len(c), total)
@@ -73,7 +103,7 @@ def music() -> np.ndarray:
         t0 += bar
         i += 1
     t = np.arange(total) / SR
-    fade = np.minimum(1, t / 2.5) * np.minimum(1, (DUR - t) / 3.0)
+    fade = np.minimum(1, t / 2.5) * np.minimum(1, (dur - t) / 3.0)
     out = out * fade
     out /= np.max(np.abs(out)) * 1.05
     left = out * (1 + 0.04 * np.sin(2 * np.pi * 0.11 * t))
@@ -104,9 +134,10 @@ def pop(freq: float = 620, vol: float = 0.5) -> np.ndarray:
     return np.sin(phase) * env * vol
 
 
-def sfx() -> np.ndarray:
-    """Assemble the full SFX track: typing bursts, send/receive pops."""
-    total = int(DUR * SR)
+def sfx(cfg: dict) -> np.ndarray:
+    """Assemble the SFX track for one video: typing bursts, send/receive pops."""
+    dur = cfg["duration"]
+    total = int(dur * SR)
     out = np.zeros(total)
 
     def place(sound: np.ndarray, at: float) -> None:
@@ -123,20 +154,33 @@ def sfx() -> np.ndarray:
             place(tap(vol=0.33 + rng.uniform(0, 0.1), tone=2600 + rng.uniform(0, 1400), dur=0.045), t0)
             t0 += 1 / rate + rng.uniform(-0.02, 0.02)
 
-    typing_burst(5.35, 5.80)
-    place(pop(700, 0.5), 5.83)
-    typing_burst(7.00, 8.10, rate=9)
-    place(pop(520, 0.45), 8.33)
-    place(pop(520, 0.45), 10.67)
-    typing_burst(12.70, 13.12)
-    place(pop(700, 0.5), 13.17)
-    typing_burst(20.05, 20.30)
-    place(pop(700, 0.45), 20.33)
-    place(pop(520, 0.42), 21.00)
-    place(pop(880, 0.35), 29.4)
+    for burst in cfg.get("typing", []):
+        start, end = burst[0], burst[1]
+        rate = burst[2] if len(burst) > 2 else 11
+        typing_burst(start, end, rate)
+
+    for freq, vol, at in cfg.get("pops", []):
+        place(pop(freq, vol), at)
+
     return np.stack([out, out])
 
 
-write_wav("/tmp/music.wav", music())
-write_wav("/tmp/sfx.wav", sfx())
-print("audio written")
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("video", choices=sorted(VIDEOS), help="composition id to synthesize audio for")
+    ap.add_argument("--out", default="out/audio", help="output directory for the WAV files")
+    args = ap.parse_args()
+
+    cfg = VIDEOS[args.video]
+    os.makedirs(args.out, exist_ok=True)
+    music_path = os.path.join(args.out, f"{args.video}-music.wav")
+    sfx_path = os.path.join(args.out, f"{args.video}-sfx.wav")
+
+    write_wav(music_path, music(cfg["duration"]))
+    write_wav(sfx_path, sfx(cfg))
+    print(f"wrote {music_path}")
+    print(f"wrote {sfx_path}")
+
+
+if __name__ == "__main__":
+    main()

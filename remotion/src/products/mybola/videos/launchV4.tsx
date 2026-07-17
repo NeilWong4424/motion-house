@@ -1,7 +1,12 @@
 import React from "react";
 import { AbsoluteFill, Sequence, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { SERIF, useFonts } from "./components";
-import { ActionSheet, AppScreen, CORAL, CREAM, INK, Omnibar, PhoneFrame, RealBubble, StatusBar, WABubble, WADoc, WAScreen, ui, uiText } from "./realui";
+import { FadeIn, SERIF, useFonts } from "../../../shared/narration/primitives";
+import { ActionSheet, Omnibar, RealBubble } from "../../../shared/ui/chat";
+import { AppScreen, PhoneFrame, StatusBar } from "../../../shared/ui/phone";
+import { WABubble, WADoc, WAScreen } from "../../../shared/ui/whatsapp";
+import { defineVideo } from "../../../shared/engine/types";
+import { ui, uiText } from "../appTheme";
+import { CORAL, CREAM, INK, KICKER, LAUNCH_BADGE, TAGLINE, WORDMARK } from "../brand";
 
 // v5: full feature demo in the real UI — member, bil, session/kehadiran,
 // jadual, kedai, WhatsApp inbox onboarding. No logo anywhere.
@@ -16,21 +21,6 @@ const C3 = 66;
 const CL = 130;
 export const TOTAL_V4 = S1 + A + C1 + B + C2 + C + C3 + CL;
 
-const FadeIn: React.FC<{ children: React.ReactNode; d?: number }> = ({ children, d = 8 }) => {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-  const o = interpolate(frame, [0, d, durationInFrames - d, durationInFrames], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  return <AbsoluteFill style={{ opacity: o }}>{children}</AbsoluteFill>;
-};
-
-const Drift: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-  const p = interpolate(frame, [0, durationInFrames], [0, 1]);
-  const e = p * p * (3 - 2 * p);
-  return <AbsoluteFill style={{ transform: `scale(${1.035 - 0.035 * e}) translateY(${-22 * (1 - e)}px)` }}>{children}</AbsoluteFill>;
-};
-
 const Serif: React.FC<{ lines: string[]; size?: number; delay?: number }> = ({ lines, size = 68, delay = 4 }) => {
   useFonts();
   const frame = useCurrentFrame();
@@ -39,7 +29,7 @@ const Serif: React.FC<{ lines: string[]; size?: number; delay?: number }> = ({ l
   return (
     <AbsoluteFill style={{ background: CREAM, alignItems: "center", justifyContent: "center", padding: "0 70px" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ opacity: ks, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 25, fontWeight: 600, letterSpacing: 9, color: CORAL, marginBottom: 34 }}>MYBOLA</div>
+        <div style={{ opacity: ks, fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 25, fontWeight: 600, letterSpacing: 9, color: CORAL, marginBottom: 34 }}>{KICKER}</div>
         {lines.map((l, i) => {
           const s = spring({ frame: frame - delay - 3 - i * 5, fps, config: { damping: 14, stiffness: 130 } });
           return <div key={i} style={{ fontFamily: SERIF, fontSize: size, color: INK, fontWeight: 500, lineHeight: 1.32, opacity: s, transform: `translateY(${interpolate(s, [0, 1], [28, 0])}px)` }}>{l}</div>;
@@ -134,7 +124,8 @@ const SceneB: React.FC = () => (
 // ---------- Scene C: kedai via WhatsApp inbox + PDF resit ----------
 const P2 = "Nak order jersi home saiz M untuk Adam";
 const SceneC: React.FC = () => (
-  <WAScreen typedText={P2} startFrame={8} charsPerFrame={0.8} sentAtFrame={60}>\n    <StatusBar time="9:02" light />
+  <WAScreen typedText={P2} startFrame={8} charsPerFrame={0.8} sentAtFrame={60}>
+    <StatusBar time="9:02" light />
     <WABubble mine atFrame={60} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>{P2}</span></WABubble>
     <WABubble atFrame={105} time="9:02 PM"><span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 32, color: "#E9EDEF", lineHeight: 1.4 }}>Pesanan disahkan — Jersi Home (M), RM65. Bil dihantar ke akaun anda.</span></WABubble>
     <WABubble mine atFrame={168} time="9:04 PM" maxWidth={860}><WADoc name="resit_bank.pdf" caption="Dah bayar yuran Jun" /></WABubble>
@@ -153,10 +144,10 @@ const CloseV5: React.FC = () => {
     <AbsoluteFill style={{ background: CREAM, alignItems: "center", justifyContent: "center", gap: 36 }}>
       <div style={{ opacity: s0, display: "inline-flex", alignItems: "center", gap: 14, border: `2px solid ${INK}`, borderRadius: 14, padding: "12px 30px" }}>
         <span style={{ width: 13, height: 13, borderRadius: "50%", background: CORAL, display: "inline-block" }} />
-        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 25, fontWeight: 600, letterSpacing: 5, color: INK }}>KINI DILANCARKAN</span>
+        <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 25, fontWeight: 600, letterSpacing: 5, color: INK }}>{LAUNCH_BADGE}</span>
       </div>
-      <span style={{ opacity: s, transform: `scale(${interpolate(s, [0, 1], [0.94, 1])})`, fontFamily: SERIF, fontSize: 116, color: INK, fontWeight: 500 }}>MyBola</span>
-      <span style={{ opacity: s2, fontFamily: SERIF, fontSize: 33, color: "rgba(31,27,22,0.6)", fontStyle: "italic" }}>Perisian pengurusan akademi bola sepak</span>
+      <span style={{ opacity: s, transform: `scale(${interpolate(s, [0, 1], [0.94, 1])})`, fontFamily: SERIF, fontSize: 116, color: INK, fontWeight: 500 }}>{WORDMARK}</span>
+      <span style={{ opacity: s2, fontFamily: SERIF, fontSize: 33, color: "rgba(31,27,22,0.6)", fontStyle: "italic" }}>{TAGLINE}</span>
     </AbsoluteFill>
   );
 };
@@ -164,12 +155,18 @@ const CloseV5: React.FC = () => {
 export const LaunchVideoV4: React.FC = () => (
   <AbsoluteFill style={{ background: CREAM }}>
     <Sequence durationInFrames={S1}><FadeIn><Greeting /></FadeIn></Sequence>
-    <Sequence from={S1} durationInFrames={A}><FadeIn><PhoneFrame dipFrames={[95, 195]}><SceneA /></PhoneFrame></FadeIn></Sequence>
+    <Sequence from={S1} durationInFrames={A}><FadeIn><PhoneFrame canvas={CREAM} dipFrames={[95, 195]}><SceneA /></PhoneFrame></FadeIn></Sequence>
     <Sequence from={S1 + A} durationInFrames={C1}><FadeIn><Serif lines={["Ahli didaftar.", "Bil dihantar."]} /></FadeIn></Sequence>
-    <Sequence from={S1 + A + C1} durationInFrames={B}><FadeIn><PhoneFrame dipFrames={[20, 195]}><SceneB /></PhoneFrame></FadeIn></Sequence>
+    <Sequence from={S1 + A + C1} durationInFrames={B}><FadeIn><PhoneFrame canvas={CREAM} dipFrames={[20, 195]}><SceneB /></PhoneFrame></FadeIn></Sequence>
     <Sequence from={S1 + A + C1 + B} durationInFrames={C2}><FadeIn><Serif size={62} lines={["Sesi, kehadiran, jadual —", "automatik."]} /></FadeIn></Sequence>
-    <Sequence from={S1 + A + C1 + B + C2} durationInFrames={C}><FadeIn><PhoneFrame dipFrames={[60, 168]}><SceneC /></PhoneFrame></FadeIn></Sequence>
+    <Sequence from={S1 + A + C1 + B + C2} durationInFrames={C}><FadeIn><PhoneFrame canvas={CREAM} dipFrames={[60, 168]}><SceneC /></PhoneFrame></FadeIn></Sequence>
     <Sequence from={S1 + A + C1 + B + C2 + C} durationInFrames={C3}><FadeIn><Serif size={56} lines={["Ibu bapa terus guna WhatsApp.", "Tiada app baru.", "Pengurus? Semua masuk MyBola."]} /></FadeIn></Sequence>
     <Sequence from={S1 + A + C1 + B + C2 + C + C3} durationInFrames={CL}><FadeIn><CloseV5 /></FadeIn></Sequence>
   </AbsoluteFill>
 );
+
+export const mybolaV4 = defineVideo({
+  id: "MyBolaV4",
+  component: LaunchVideoV4,
+  durationInFrames: TOTAL_V4,
+});
