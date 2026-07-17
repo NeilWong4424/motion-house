@@ -1,15 +1,24 @@
-# MyBola Product Video (Remotion)
+# Product Videos (Remotion)
 
-Code-driven launch video for MyBola — a Malaysian football academy management SaaS
-(AI admin assistant + AI parent inbox). Built with Remotion (React + TypeScript),
-rendered to portrait 1080x1920 MP4. Current cut: v7 (~46s), composition id `MyBolaV4`.
+Code-driven product launch videos. Remotion (React + TypeScript), rendered to
+portrait 1080x1920 MP4 at 30fps.
+
+This repo holds **many videos across many products** — see Architecture below.
+The first (and so far only) product is **MyBola**, a Malaysian football academy
+management SaaS (AI admin assistant + AI parent inbox). Its current cut is v7
+(~46s), composition id `MyBolaV4`; `MyBolaLaunch` is the older v3.
+
+Most rules below (two-layer design, code-exact UI, copy) were written for MyBola
+and describe the house style. A second product keeps the structural rules and
+brings its own brand, app UI, and copy language.
 
 ## Commands
 
 - `npm run studio` — live preview (primary dev loop; hot-reloads on save)
 - `npm run render <CompositionId> out/<name>.mp4` — render any video by id
 - `npm run render:mybola-v4` — render the current cut to `out/MyBolaV4.mp4`
-- `npm run still <CompositionId> out/frame.png --frame=N` — single frame check
+- `npm run still <CompositionId> out/frame.png -- --frame=N` — single frame check
+  (note the `--` before `--frame`, so npm passes the flag through)
 - `npx remotion compositions src/index.ts` — list every registered video
 - Audio: `npm run audio:mybola-v4` → `out/audio/MyBolaV4-{music,sfx}.wav`;
   mix with ffmpeg `amix` (see Audio section below)
@@ -137,4 +146,6 @@ video — compare frames by eye, and treat SSIM ≥ ~0.9997 as "within renderer 
    side, one action flowing across both.
 4. Simulated cursor interaction on the desktop side (menu click, export flow).
 5. Hand-tune spring configs per shot in Studio (was impractical in sandbox).
-6. Real Axiforma font files if licensed (swap in public/fonts + realui.tsx).
+6. Real Axiforma font files if licensed (swap in `public/fonts/` + the PJS loader
+   in `shared/ui/theme.tsx`).
+7. Realign MyBolaV4's SFX cue times to v7's scene boundaries (see Audio above).
