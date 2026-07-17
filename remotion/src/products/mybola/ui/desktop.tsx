@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill } from "remotion";
-import { SC, UIFONT, ui, uiText, usePjs } from "../appTheme";
+import { UIFONT, ui, usePjs } from "../appTheme";
+import { deskText } from "./deskText";
 
 // =============================================================================
 // MyBola desktop portal — recreated from portal/shell/*.dart
@@ -42,7 +43,7 @@ const initialsOf = (name: string): string =>
 
 // CupertinoIcons equivalents, drawn as strokes to match the app's line weight.
 const Icon: React.FC<{ name: string; colour: string; size?: number }> = ({ name, colour, size = 17 }) => {
-  const s = size * SC;
+  const s = size;
   const p = { fill: "none", stroke: colour, strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return (
     <svg width={s} height={s} viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
@@ -59,12 +60,12 @@ const Icon: React.FC<{ name: string; colour: string; size?: number }> = ({ name,
 
 /** ShellTopHeader — academy logo + name centred, settings gear right. */
 const TopHeader: React.FC<{ academy: string }> = ({ academy }) => (
-  <div style={{ height: 56 * SC, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
-    <div style={{ display: "flex", alignItems: "center", gap: 10 * SC }}>
-      <div style={{ width: 20 * SC, height: 20 * SC, borderRadius: 5 * SC, background: ui.primary }} />
-      <span style={uiText.label}>{academy}</span>
+  <div style={{ height: 56, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ width: 20, height: 20, borderRadius: 5, background: ui.primary }} />
+      <span style={deskText.label}>{academy}</span>
     </div>
-    <div style={{ position: "absolute", right: 16 * SC }}>
+    <div style={{ position: "absolute", right: 16 }}>
       <Icon name="gear" colour={ui.tertiary} size={16} />
     </div>
   </div>
@@ -72,36 +73,36 @@ const TopHeader: React.FC<{ academy: string }> = ({ academy }) => (
 
 /** BusinessRail — width 72, 52px academy tiles. */
 const Rail: React.FC<{ initials: string }> = ({ initials }) => (
-  <div style={{ width: 72 * SC, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 10 * SC, gap: 10 * SC, flexShrink: 0 }}>
-    <div style={{ width: 52 * SC, height: 52 * SC, borderRadius: 14 * SC, background: ui.primary, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span style={{ fontFamily: UIFONT, fontSize: 18 * SC, fontWeight: 600, color: ui.white }}>{initials}</span>
+  <div style={{ width: 72, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 10, gap: 10, flexShrink: 0 }}>
+    <div style={{ width: 52, height: 52, borderRadius: 14, background: ui.primary, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <span style={{ fontFamily: UIFONT, fontSize: 18, fontWeight: 600, color: ui.white }}>{initials}</span>
     </div>
-    <div style={{ width: 52 * SC, height: 52 * SC, borderRadius: 14 * SC, background: ui.secondary, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <span style={{ fontFamily: UIFONT, fontSize: 26 * SC, fontWeight: 300, color: ui.success, lineHeight: 1 }}>+</span>
+    <div style={{ width: 52, height: 52, borderRadius: 14, background: ui.secondary, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <span style={{ fontFamily: UIFONT, fontSize: 26, fontWeight: 300, color: ui.success, lineHeight: 1 }}>+</span>
     </div>
   </div>
 );
 
 /** Sidebar — width 240, page list; active row = primary, others tertiary. */
 const Sidebar: React.FC<{ active: PageId; user: string }> = ({ active, user }) => (
-  <div style={{ width: 240 * SC, flexShrink: 0, display: "flex", flexDirection: "column", padding: `${10 * SC}px ${10 * SC}px`, boxSizing: "border-box" }}>
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 * SC }}>
+  <div style={{ width: 240, flexShrink: 0, display: "flex", flexDirection: "column", padding: `${10}px ${10}px`, boxSizing: "border-box" }}>
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
       {PAGES.map((pg) => {
         const on = pg.id === active;
         const c = on ? ui.white : ui.tertiary;
         return (
-          <div key={pg.id} style={{ height: 34 * SC, borderRadius: 8 * SC, background: on ? ui.primary : "transparent", display: "flex", alignItems: "center", padding: `0 ${10 * SC}px`, gap: 6 * SC }}>
+          <div key={pg.id} style={{ height: 34, borderRadius: 8, background: on ? ui.primary : "transparent", display: "flex", alignItems: "center", padding: `0 ${10}px`, gap: 6 }}>
             <Icon name={pg.icon} colour={c} size={16} />
-            <span style={{ ...uiText.label, color: c, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pg.name}</span>
+            <span style={{ ...deskText.label, color: c, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pg.name}</span>
           </div>
         );
       })}
     </div>
-    <div style={{ height: 44 * SC, display: "flex", alignItems: "center", gap: 8 * SC, borderTop: `1px solid ${ui.border}`, paddingTop: 8 * SC }}>
-      <div style={{ width: 26 * SC, height: 26 * SC, borderRadius: "50%", background: ui.secondary, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <span style={{ fontFamily: UIFONT, fontSize: 11 * SC, fontWeight: 600, color: ui.white }}>{initialsOf(user)}</span>
+    <div style={{ height: 44, display: "flex", alignItems: "center", gap: 8, borderTop: `1px solid ${ui.border}`, paddingTop: 8 }}>
+      <div style={{ width: 26, height: 26, borderRadius: "50%", background: ui.secondary, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <span style={{ fontFamily: UIFONT, fontSize: 11, fontWeight: 600, color: ui.white }}>{initialsOf(user)}</span>
       </div>
-      <span style={{ ...uiText.meta, whiteSpace: "nowrap" }}>{user}</span>
+      <span style={{ ...deskText.meta, whiteSpace: "nowrap" }}>{user}</span>
     </div>
   </div>
 );
@@ -125,17 +126,17 @@ export const DesktopShell: React.FC<{
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
         <Rail initials="AT" />
         {/* Panel: shared top-left radius 26 + left/top border, per _DesktopLayout. */}
-        <div style={{ flex: 1, display: "flex", borderTopLeftRadius: 26 * SC, borderLeft: `1px solid ${ui.border}`, borderTop: `1px solid ${ui.border}`, overflow: "hidden", minWidth: 0 }}>
+        <div style={{ flex: 1, display: "flex", borderTopLeftRadius: 26, borderLeft: `1px solid ${ui.border}`, borderTop: `1px solid ${ui.border}`, overflow: "hidden", minWidth: 0 }}>
           <Sidebar active={active} user={user} />
           <div style={{ width: 1, background: ui.border, flexShrink: 0 }} />
           <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <div style={{ height: 52 * SC, display: "flex", alignItems: "center", padding: `0 ${20 * SC}px`, flexShrink: 0 }}>
-              <span style={uiText.title}>{pageTitle}</span>
+            <div style={{ height: 52, display: "flex", alignItems: "center", padding: `0 ${20}px`, flexShrink: 0 }}>
+              <span style={deskText.title}>{pageTitle}</span>
             </div>
             <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-              <div style={{ flex: 1, padding: 10 * SC, minWidth: 0, overflow: "hidden" }}>{children}</div>
+              <div style={{ flex: 1, padding: 10, minWidth: 0, overflow: "hidden" }}>{children}</div>
               {aside ? (
-                <div style={{ width: 320 * SC, flexShrink: 0, borderLeft: `1px solid ${ui.border}`, padding: 10 * SC, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 10 * SC }}>
+                <div style={{ width: 320, flexShrink: 0, borderLeft: `1px solid ${ui.border}`, padding: 10, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 10 }}>
                   {aside}
                 </div>
               ) : null}

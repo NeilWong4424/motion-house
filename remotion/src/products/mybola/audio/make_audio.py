@@ -37,6 +37,35 @@ VIDEOS: dict[str, dict] = {
         "pops": [(700, 0.5, 5.83), (520, 0.45, 8.33), (520, 0.45, 10.67), (700, 0.5, 13.17),
                  (700, 0.45, 20.33), (520, 0.42, 21.00), (880, 0.35, 29.4)],
     },
+    # v8 — cues derived from the actual scene table in videos/launchV8.tsx.
+    # Recompute these whenever a scene length changes: a pop even 3 frames off
+    # its send reads as broken.
+    #   sceneA  f150   typing f+8..92, send f+95, reply f+140, send f+195, reply f+243
+    #   sceneB  f546   voice f+20, reply f+100, reply f+245
+    #   sceneC  f927   typing f+8..58, send f+60, reply f+105, doc f+168, reply f+230
+    "MyBolaV8": {
+        "duration": 76.9,  # timeline is 76.70s; a little tail so the bed never ends early
+        "typing": [
+            (5.27, 8.07, 9),    # sceneA: first request typed
+            (11.00, 11.43, 11), # sceneA: second request
+            (31.17, 32.83, 9),  # sceneC: WhatsApp order typed
+        ],
+        "pops": [
+            (700, 0.50, 8.17),   # send 1
+            (520, 0.45, 9.67),   # reply 1
+            (700, 0.50, 11.50),  # send 2
+            (520, 0.45, 13.10),  # reply 2
+            (700, 0.45, 18.87),  # voice note sent
+            (520, 0.42, 21.53),  # attendance reply
+            (520, 0.42, 26.37),  # schedule reply
+            (700, 0.50, 32.90),  # WA send
+            (520, 0.45, 34.40),  # WA reply
+            (700, 0.45, 36.50),  # WA receipt doc
+            (520, 0.42, 38.57),  # WA confirm
+            (880, 0.35, 46.20),  # the turn -> dashboard
+            (880, 0.30, 60.30),  # bil -> ahli
+        ],
+    },
 }
 
 
