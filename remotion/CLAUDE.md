@@ -134,8 +134,8 @@ parent 9:02 PM — status bar clock must match bubble timestamps.
 
 ## Audio
 
-`src/products/mybola/audio/make_audio.py` synthesizes a chord-pad score plus UI
-SFX (typing taps before sends, send/receive pops). It is **per-video**: each entry
+`src/products/mybola/audio/make_audio.py` synthesizes the score (see `score.py`)
+plus UI SFX (typing taps before sends, send/receive pops). It is **per-video**: each entry
 in its `VIDEOS` dict carries that cut's `duration` and cue table, so a new video
 adds a dict entry rather than editing the synthesis code.
 
@@ -161,9 +161,22 @@ ffmpeg -i out/<Id>.mp4 -i out/audio/<Id>-music.wav -i out/audio/<Id>-sfx.wav   -
 Then verify: `volumedetect` should report **mean ≈ −37 dB, max ≈ −18 dB**, and a
 tap window should still peak ~−19 dB so the SFX reads above the bed.
 
+**The score is written to the cut.** `score.py` is a FREE-TIME score — no drum
+pulse, no bar grid — because this edit's scene gaps are 3.33/6/7s and 3.33s isn't
+a musical duration at any tempo (best fit across 56-120bpm still drifted ~58ms per
+cut; a grid would fight the picture and you'd hear it). Instead each `VIDEOS` entry
+carries a `cuts` list — the film's actual scene-change times — and chord changes
+land exactly on them (verified: 10/10 within 50ms). `payoff_at` marks the film's
+turn: the harmony lifts to the relative major and the glass bell sounds ONCE.
+
+**Recompute `cuts` whenever a scene length changes**, or the score drifts off the
+edit. The instruments match the design language: felt piano (voice), bowed strings
+(bed), upright bass (floor), glass bell (the accent, used once — scarcity, exactly
+like coral in the visual layer). No drums: a pulse would make it a promo.
+
 **Known gap:** MyBolaV4's typing/pop cue times still match the older 34.4s layout,
-not v7's 46.1s scene boundaries, so they no longer land on their sends. The music
-bed is correct. Realigning the cues is a tracked follow-up (see `docs/`).
+not v7's 46.1s scene boundaries, so they no longer land on their sends. Realigning
+those cues is a tracked follow-up (see `docs/`).
 
 ## Verify before declaring done
 

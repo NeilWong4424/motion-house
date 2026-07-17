@@ -47,7 +47,9 @@ VIDEOS: dict[str, dict] = {
     #   sceneC  f927   typing f+8..58, send f+60, reply f+105, doc f+168, reply f+230
     "MyBolaV8": {
         "duration": 76.9,  # timeline is 76.70s; a little tail so the bed never ends early
-        "lift_at": 45.9,  # "Dan duit? Semua nampak." — the turn to the dashboard
+        # Scene cuts from videos/launchV8.tsx.
+        "cuts": [3.0, 5.0, 16.0, 18.2, 28.7, 30.9, 41.57, 43.77, 45.97, 57.97, 60.17, 70.17, 72.37],
+        "payoff_at": 45.97,  # "Dan duit? Semua nampak." — the turn to the dashboard
         "typing": [
             (5.27, 8.07, 9),    # sceneA: first request typed
             (11.00, 11.43, 11), # sceneA: second request
@@ -73,8 +75,13 @@ VIDEOS: dict[str, dict] = {
     # Taps land on the press frame, sheet pops on the slide-up.
     "MyBolaParent": {
         "duration": 59.5,  # timeline is 59.33s
-        # Adam's card lands ~24s — the film turns there, so the score lifts.
-        "lift_at": 23.7,
+        # Scene-cut times from videos/parentOnboarding.tsx. Chord changes land on
+        # these, so the score is written to the edit rather than looped under it.
+        # Recompute whenever a scene length changes.
+        "cuts": [3.33, 9.33, 16.33, 19.67, 25.67, 31.67, 37.67, 44.67, 51.67, 55.0],
+        # Adam's card lands at 25.67 — the film turns there, so the score lifts
+        # to the relative major and the bell sounds once.
+        "payoff_at": 25.67,
         "typing": [
             (9.17, 9.90, 11),   # phone number entered
             (18.30, 18.97, 11), # display name entered
@@ -133,10 +140,10 @@ def chord(freqs: list[float], dur: float, vol: float = 1.0) -> np.ndarray:
     return out
 
 
-def music(dur: float, lift_at: float | None = None) -> np.ndarray:
-    """The score. See score.py — a written progression with voice leading and an
-    arrangement that lifts at the film's turn, not a four-chord drone."""
-    return compose(dur, lift_at=lift_at)
+def music(dur: float, cuts=None, payoff_at=None) -> np.ndarray:
+    """The score. See score.py — free-time, chord changes landing on the film's
+    scene cuts, felt piano + strings + upright bass, one bell on the payoff."""
+    return compose(dur, cuts=cuts, payoff_at=payoff_at)
 
 
 def tap(vol: float = 0.5, tone: float = 3200, dur: float = 0.05) -> np.ndarray:
@@ -204,7 +211,7 @@ def main() -> None:
     music_path = os.path.join(args.out, f"{args.video}-music.wav")
     sfx_path = os.path.join(args.out, f"{args.video}-sfx.wav")
 
-    write_wav(music_path, music(cfg["duration"], cfg.get("lift_at")))
+    write_wav(music_path, music(cfg["duration"], cfg.get("cuts"), cfg.get("payoff_at")))
     write_wav(sfx_path, sfx(cfg))
     print(f"wrote {music_path}")
     print(f"wrote {sfx_path}")
