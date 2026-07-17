@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Sequence, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { SERIF, useFonts } from "../../../shared/narration/primitives";
 import { FadeIn } from "../../../shared/motion/transitions";
+import { Shot } from "../../../shared/motion/shot";
 import { StatusBar } from "../../../shared/ui/phone";
 import { defineVideo } from "../../../shared/engine/types";
 import { PhoneFrame } from "../ui/phone";
@@ -223,17 +224,63 @@ const Close: React.FC = () => {
   );
 };
 
+// =============================================================================
+// Shot breakdown (fen jing)
+// =============================================================================
+// Every scene used to be one static wide take for 6+ seconds while the phone
+// itself slowly scaled. Now the phone is locked and the CAMERA does the work:
+// establish wide, cut in on the thing that matters, hold, pull back.
+//
+// Coordinates are composition space. The phone screen spans y 57..1863; inside
+// it the glass auth card sits ~y 960, portal cards ~y 700, sheets ~y 1500.
+const S_LOGIN = [
+  { until: 30 },                                // wide: the app, the ball, the shell
+  { until: 115, x: 540, y: 1010, scale: 1.15 }, // in: the welcome + buttons
+  { until: 150, x: 540, y: 1075, scale: 1.15 }, // reframe low: the Google tap
+  { until: LOGIN },                             // pull back
+];
+
+const S_PHONE = [
+  { until: 25 },
+  { until: 140, x: 540, y: 980, scale: 1.15 },  // in: watch the number typed
+  { until: 172, x: 540, y: 1080, scale: 1.15 }, // reframe low: the Seterusnya tap
+  { until: PHONE },
+];
+
+const S_NAME = [
+  { until: 25 },
+  { until: 125, x: 540, y: 980, scale: 1.15 },
+  { until: 158, x: 540, y: 1080, scale: 1.15 },
+  { until: NAME },
+];
+
+// The payoff: hold wide so Adam's card LANDS in an empty frame, then ease in.
+const S_PORTAL = [
+  { until: 55 },
+  { until: 150, x: 540, y: 760, scale: 1.15, via: "move" as const, moveFrames: 28 },
+  { until: PORTAL },
+];
+
+// Sheets: establish, settle on the sheet, reframe onto the action, back off so
+// the result lands in view.
+const sheetShots = (dur: number, tapAt: number) => [
+  { until: 34 },
+  { until: tapAt - 20, x: 540, y: 1430, scale: 1.15 },
+  { until: tapAt + 40, x: 540, y: 1560, scale: 1.15 },
+  { until: dur, x: 540, y: 1430, scale: 1.15 },
+];
+
 export const ParentOnboarding: React.FC = () => (
   <AbsoluteFill style={{ background: CREAM }}>
     <Sequence durationInFrames={H}><FadeIn><Serif lines={["Anak dah didaftar.", "Sekarang giliran anda."]} /></FadeIn></Sequence>
-    <Sequence from={AT_LOGIN} durationInFrames={LOGIN}><FadeIn><PhoneFrame canvas={CREAM}><LoginScene /></PhoneFrame></FadeIn></Sequence>
-    <Sequence from={AT_PHONE} durationInFrames={PHONE}><FadeIn><PhoneFrame canvas={CREAM}><PhoneScene /></PhoneFrame></FadeIn></Sequence>
+    <Sequence from={AT_LOGIN} durationInFrames={LOGIN}><FadeIn><Shot shots={S_LOGIN}><PhoneFrame canvas={CREAM}><LoginScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_PHONE} durationInFrames={PHONE}><FadeIn><Shot shots={S_PHONE}><PhoneFrame canvas={CREAM}><PhoneScene /></PhoneFrame></Shot></FadeIn></Sequence>
     <Sequence from={AT_CARD1} durationInFrames={CARD1}><FadeIn><Serif size={62} lines={["Nombor anda kunci.", "Anak anda muncul."]} /></FadeIn></Sequence>
-    <Sequence from={AT_NAME} durationInFrames={NAME}><FadeIn><PhoneFrame canvas={CREAM}><NameScene /></PhoneFrame></FadeIn></Sequence>
-    <Sequence from={AT_PORTAL} durationInFrames={PORTAL}><FadeIn><PhoneFrame canvas={CREAM}><PortalScene /></PhoneFrame></FadeIn></Sequence>
-    <Sequence from={AT_SESI} durationInFrames={SESI}><FadeIn><PhoneFrame canvas={CREAM}><SesiScene /></PhoneFrame></FadeIn></Sequence>
-    <Sequence from={AT_BIL} durationInFrames={BIL}><FadeIn><PhoneFrame canvas={CREAM}><BilScene /></PhoneFrame></FadeIn></Sequence>
-    <Sequence from={AT_KEDAI} durationInFrames={KEDAI}><FadeIn><PhoneFrame canvas={CREAM}><KedaiScene /></PhoneFrame></FadeIn></Sequence>
+    <Sequence from={AT_NAME} durationInFrames={NAME}><FadeIn><Shot shots={S_NAME}><PhoneFrame canvas={CREAM}><NameScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_PORTAL} durationInFrames={PORTAL}><FadeIn><Shot shots={S_PORTAL}><PhoneFrame canvas={CREAM}><PortalScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_SESI} durationInFrames={SESI}><FadeIn><Shot shots={sheetShots(SESI, 110)}><PhoneFrame canvas={CREAM}><SesiScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_BIL} durationInFrames={BIL}><FadeIn><Shot shots={sheetShots(BIL, 128)}><PhoneFrame canvas={CREAM}><BilScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_KEDAI} durationInFrames={KEDAI}><FadeIn><Shot shots={sheetShots(KEDAI, 138)}><PhoneFrame canvas={CREAM}><KedaiScene /></PhoneFrame></Shot></FadeIn></Sequence>
     <Sequence from={AT_CARD2} durationInFrames={CARD2}><FadeIn><Serif size={62} lines={["Semua dari", "telefon anda."]} /></FadeIn></Sequence>
     <Sequence from={AT_CLOSE} durationInFrames={CLOSE}><FadeIn><Close /></FadeIn></Sequence>
   </AbsoluteFill>

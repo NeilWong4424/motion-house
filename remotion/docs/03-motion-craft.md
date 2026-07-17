@@ -85,15 +85,28 @@ percent of the base colour. The viewer should feel the depth, not see the gradie
 
 ---
 
-## Camera
+## Camera (运镜) and shot breakdown (分镜)
 
-- **Move the camera or move the subject — not both.** MyBola's rule ("the phone
-  never moves; only the camera zooms") exists because simultaneous motion turns
-  into mush.
-- **Push-ins are slow.** 1.0 → 1.045 across a whole scene. If the zoom is
-  noticeable frame to frame, it's too fast.
-- **Parallax is subtle.** `depth` 0.85 or 1.15. Beyond that it reads as a
-  PowerPoint effect.
+**A scene is not one static wide take.** The single biggest quality gap in a demo
+film is showing one unbroken 10-second wide shot while something slowly drifts.
+Real product films cut *within* a scene: establish wide → cut in on the thing being
+typed → hold on the result → pull back. Use `<Shot>` (`shared/motion/shot.tsx`) to
+write that breakdown as a shot list.
+
+- **The subject NEVER moves. The camera moves.** If your device mockup is scaling,
+  that's a prop animating itself. It reads as cheap — and if each scene mounts its
+  own copy, the zoom resets at every cut and the device visibly *pumps* smaller.
+  That exact bug shipped here for months behind a comment claiming the opposite.
+- **Cut, don't drift.** A cut is free; a move costs time. Most beats want a cut to
+  a new framing, not a slow crawl toward it. Reserve `via: "move"` for moments
+  where the travel itself means something (a reveal landing, a payoff).
+- **Mind the subject's edges.** Punching past the point where the device leaves
+  frame stops reading as "an app on a phone" and becomes a bare UI — you lose the
+  two-layer premise. For a 902px phone in a 1080px frame the limit is 1080/902 =
+  **1.19**, so gentle punches (~1.15) are the whole useful range. If you need a
+  harder punch, **stage the subject smaller first** — never crop it away.
+- **Push-ins are slow.** If the zoom is noticeable frame to frame, it's too fast.
+- **Parallax is subtle.** `depth` 0.85 or 1.15. Beyond that it's a PowerPoint effect.
 
 ---
 

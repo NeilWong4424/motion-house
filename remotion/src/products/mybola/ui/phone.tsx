@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 import { ui, usePjs } from "../appTheme";
 
 // =============================================================================
@@ -25,13 +25,16 @@ export const PhoneFrame: React.FC<{
   canvas: string;
   rim?: string;
 }> = ({ children, canvas, rim = "rgba(31,27,22,0.35)" }) => {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-  // Camera only: slow push-in across the scene; the phone itself never moves.
-  const p = interpolate(frame, [0, durationInFrames], [0, 1]);
-  const zoom = 1.0 + 0.045 * (p * p * (3 - 2 * p));
+  // The phone is DEAD STILL. It used to carry `scale(1 + 0.045 * t)`, which was
+  // wrong twice over: the scaled element contains the phone, so it was the phone
+  // moving rather than a camera; and because each scene mounts its own
+  // PhoneFrame, the zoom reset to 1.0 on every cut — the device visibly pumped
+  // smaller at each scene change.
+  //
+  // Camera work belongs to <Shot> (shared/motion/shot.tsx), which frames and
+  // moves the whole composition. A prop never moves itself.
   return (
-    <AbsoluteFill style={{ background: canvas, transform: `scale(${zoom})` }}>
+    <AbsoluteFill style={{ background: canvas }}>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
         <div style={{ position: "absolute", width: 1300, height: 1300, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 65%)" }} />
         <div style={{ position: "absolute", bottom: 46, width: 620, height: 60, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(31,27,22,0.30) 0%, rgba(31,27,22,0) 70%)", filter: "blur(6px)" }} />

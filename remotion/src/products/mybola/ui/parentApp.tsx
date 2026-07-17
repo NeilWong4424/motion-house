@@ -71,11 +71,14 @@ const heading: React.CSSProperties = {
   textAlign: "center",
 };
 
-/** DesktopButton — the app's filled action button. */
-const Btn: React.FC<{ text: string; icon?: React.ReactNode; primary?: boolean; atFrame?: number; press?: number }> = ({
+/**
+ * DesktopButton — button.dart exactly: height 28, radius 6, padding h16, and the
+ * fill defaults to color.primary (the real buttons are blue, not grey).
+ */
+const Btn: React.FC<{ text: string; icon?: React.ReactNode; fill?: string; atFrame?: number; press?: number }> = ({
   text,
   icon,
-  primary = false,
+  fill,
   atFrame = 0,
   press,
 }) => {
@@ -89,9 +92,10 @@ const Btn: React.FC<{ text: string; icon?: React.ReactNode; primary?: boolean; a
         opacity: o,
         transform: `scale(${1 - 0.03 * p})`,
         width: "100%",
-        height: 34 * SC,
-        borderRadius: 8 * SC,
-        background: primary ? ui.primary : ui.secondary,
+        height: 28 * SC,
+        borderRadius: 6 * SC,
+        background: fill ?? ui.primary,
+        padding: `0 ${16 * SC}px`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -190,7 +194,7 @@ export const ParentSetupStep: React.FC<{
           )}
         </div>
         <div style={{ height: 14 * SC }} />
-        <Btn text={cta} primary atFrame={ctaAt} press={pressAt} />
+        <Btn text={cta} atFrame={ctaAt} press={pressAt} />
       </Glass>
     </AuthBackdrop>
   );
@@ -353,8 +357,9 @@ export const SheetButton: React.FC<{ text: string; atFrame?: number; pressAt?: n
       style={{
         opacity: o,
         transform: `scale(${1 - 0.03 * p})`,
-        height: 44 * SC,
-        borderRadius: 10 * SC,
+        height: 48 * SC,
+        borderRadius: 25 * SC,
+        padding: `0 ${16 * SC}px`,
         background: tone === "success" ? ui.success : ui.primary,
         display: "flex",
         alignItems: "center",
