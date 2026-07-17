@@ -3,3 +3,7 @@ remotion/out/
 out/
 *.log
 .DS_Store
+
+# Remotion render/bundler caches
+.cache/
+.remotion/
