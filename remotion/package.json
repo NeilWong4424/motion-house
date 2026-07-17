@@ -7,7 +7,9 @@
     "still": "remotion still src/index.ts",
     "render:mybola-v4": "remotion render src/index.ts MyBolaV4 out/MyBolaV4.mp4",
     "render:mybola-v3": "remotion render src/index.ts MyBolaLaunch out/MyBolaLaunch.mp4",
-    "audio:mybola-v4": "python src/products/mybola/audio/make_audio.py MyBolaV4 --out out/audio"
+    "audio:mybola-v4": "python src/products/mybola/audio/make_audio.py MyBolaV4 --out out/audio",
+    "audio:mybola-v8": "python src/products/mybola/audio/make_audio.py MyBolaV8 --out out/audio",
+    "audio:mybola-parent": "python src/products/mybola/audio/make_audio.py MyBolaParent --out out/audio"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

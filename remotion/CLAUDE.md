@@ -149,6 +149,18 @@ ffmpeg -i out/MyBolaV4.mp4 -i out/audio/MyBolaV4-music.wav -i out/audio/MyBolaV4
 `duration` must cover the full cut — audio shorter than the video silently ends
 early (`amix duration=first` follows the first audio input).
 
+**Mix levels — music is a BED, not a layer.** Measured against the Dispatch
+reference: it sits at **mean −37 dB, max −18 dB**. Our first cuts ran at −21/−4,
+roughly 15 dB hot and peaking near clipping, which is a large part of why they
+felt cheap. Mix music at `volume=0.05` and SFX at `volume=0.22`:
+
+```
+ffmpeg -i out/<Id>.mp4 -i out/audio/<Id>-music.wav -i out/audio/<Id>-sfx.wav   -filter_complex "[1:a]volume=0.05[m];[2:a]volume=0.22[s];[m][s]amix=inputs=2:duration=first:normalize=0[a]"   -map 0:v -map "[a]" -c:v copy -c:a aac -b:a 192k out/<Id>-final.mp4
+```
+
+Then verify: `volumedetect` should report **mean ≈ −37 dB, max ≈ −18 dB**, and a
+tap window should still peak ~−19 dB so the SFX reads above the bed.
+
 **Known gap:** MyBolaV4's typing/pop cue times still match the older 34.4s layout,
 not v7's 46.1s scene boundaries, so they no longer land on their sends. The music
 bed is correct. Realigning the cues is a tracked follow-up (see `docs/`).
@@ -157,7 +169,8 @@ bed is correct. Realigning the cues is a tracked follow-up (see `docs/`).
 
 Render stills at each scene's key frame and LOOK at them; after full renders,
 extract frames at transitions (`ffmpeg -ss <t> -frames:v 1`) and check audio
-(`volumedetect`: mean ≈ −20 to −23 dB; SFX present in typing windows).
+(`volumedetect`: mean ≈ −37 dB, max ≈ −18 dB — matching the reference; SFX
+present in typing windows).
 
 **Renders are not bit-reproducible.** Two renders of identical, unchanged code
 produce different md5s and SSIM ≈ 0.9999 (font rasterization/JPEG timing varies per

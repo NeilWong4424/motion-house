@@ -97,9 +97,20 @@ write that breakdown as a shot list.
   that's a prop animating itself. It reads as cheap — and if each scene mounts its
   own copy, the zoom resets at every cut and the device visibly *pumps* smaller.
   That exact bug shipped here for months behind a comment claiming the opposite.
-- **Cut, don't drift.** A cut is free; a move costs time. Most beats want a cut to
-  a new framing, not a slow crawl toward it. Reserve `via: "move"` for moments
-  where the travel itself means something (a reveal landing, a payoff).
+- **分镜 is NOT "more shots". Confidence is holding.** Measured against the
+  Dispatch reference: it makes **6 hard cuts in 36s (~1 per 6s)** and uses only
+  **two framings** for the entire film. It never punches in. What looks like
+  cutting is the CONTENT changing inside a locked frame — a dialog opens, a
+  window swaps, a cursor moves — while the camera sits perfectly still.
+  A pass here that added 3-4 punch-ins per scene hit 19 cuts in 56s, twice the
+  reference's rate, and read as choppy rather than premium. Default to ONE
+  static framing per scene, held 5-8s, and let the content carry the beat.
+- **Cut, don't drift.** When you do change framing, a cut is free; a move costs
+  time. Reserve `via: "move"` for the one or two moments where the travel itself
+  means something (a reveal landing, a payoff).
+- **A held frame is not a dead frame.** Measured at a low threshold the reference
+  has *more* visual change than our cuts do — it holds the camera but something
+  is always arriving, typing, or updating. Static camera, live content.
 - **Mind the subject's edges.** Punching past the point where the device leaves
   frame stops reading as "an app on a phone" and becomes a bare UI — you lose the
   two-layer premise. For a 902px phone in a 1080px frame the limit is 1080/902 =
@@ -126,7 +137,15 @@ write that breakdown as a shot list.
 Audio isn't decoration — it's half the perceived production value.
 
 - Music defines pacing. Cut to it; don't lay it under afterwards.
-- Mean level ≈ −20 to −23 dB (`volumedetect`). Louder is not better.
+- **Music is a bed, not a layer.** Measured: the reference sits at **mean −37 dB,
+  max −18 dB**. Our first cuts ran −21/−4 — ~15 dB hot, peaking near clipping —
+  and that alone made them feel cheap. Mix music at `volume=0.05`, SFX at
+  `volume=0.22`, and verify with `volumedetect`.
+- **Synthesized music has a ceiling.** A four-chord sine pad is filler and sounds
+  like it. If you must synthesize, compose properly: a real progression with
+  voice leading, struck timbres with inharmonic partials, an arrangement that
+  lifts at the film's turn (see `products/mybola/audio/score.py`). Licensed
+  production music beats the best synthesis — if it exists, use it.
 - SFX must land **on** the frame of the event, not near it. A pop 3 frames late
   reads as broken.
 - The score should cover the full cut — audio ending early is worse than no audio.

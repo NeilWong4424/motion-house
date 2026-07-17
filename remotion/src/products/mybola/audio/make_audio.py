@@ -16,6 +16,8 @@ import os
 import numpy as np
 import wave
 
+from score import compose
+
 SR = 48000
 
 
@@ -45,6 +47,7 @@ VIDEOS: dict[str, dict] = {
     #   sceneC  f927   typing f+8..58, send f+60, reply f+105, doc f+168, reply f+230
     "MyBolaV8": {
         "duration": 76.9,  # timeline is 76.70s; a little tail so the bed never ends early
+        "lift_at": 45.9,  # "Dan duit? Semua nampak." — the turn to the dashboard
         "typing": [
             (5.27, 8.07, 9),    # sceneA: first request typed
             (11.00, 11.43, 11), # sceneA: second request
@@ -69,7 +72,9 @@ VIDEOS: dict[str, dict] = {
     # Parent onboarding — cues derived from videos/parentOnboarding.tsx.
     # Taps land on the press frame, sheet pops on the slide-up.
     "MyBolaParent": {
-        "duration": 56.4,  # timeline is 56.23s
+        "duration": 59.5,  # timeline is 59.33s
+        # Adam's card lands ~24s — the film turns there, so the score lifts.
+        "lift_at": 23.7,
         "typing": [
             (9.17, 9.90, 11),   # phone number entered
             (18.30, 18.97, 11), # display name entered
@@ -128,38 +133,10 @@ def chord(freqs: list[float], dur: float, vol: float = 1.0) -> np.ndarray:
     return out
 
 
-def music(dur: float) -> np.ndarray:
-    """Warm four-chord pad progression covering the full video with fades."""
-    F3, A3, C4, E4 = 174.61, 220.0, 261.63, 329.63
-    G3, B3, D4 = 196.0, 246.94, 293.66
-    Am = [220.0, 261.63, 329.63]
-    Fmaj7 = [F3, A3, C4, E4]
-    Cmaj = [130.81, 196.0, 261.63, 329.63]
-    Gmaj = [G3, B3, D4, 392.0]
-    prog = [Fmaj7, Cmaj, Am, Gmaj]
-    bar = 4.4
-    total = int(dur * SR)
-    out = np.zeros(total)
-    t0 = 0.0
-    i = 0
-    while t0 < dur:
-        start = int(t0 * SR)
-        c = chord(prog[i % 4], bar + 0.9, vol=0.9)
-        e1 = min(start + len(c), total)
-        out[start:e1] += c[: e1 - start]
-        bass_f = prog[i % 4][0] / 2
-        b = note(bass_f, bar + 0.5, attack=0.15, release=1.2, vol=0.30)
-        e2 = min(start + len(b), total)
-        out[start:e2] += b[: e2 - start]
-        t0 += bar
-        i += 1
-    t = np.arange(total) / SR
-    fade = np.minimum(1, t / 2.5) * np.minimum(1, (dur - t) / 3.0)
-    out = out * fade
-    out /= np.max(np.abs(out)) * 1.05
-    left = out * (1 + 0.04 * np.sin(2 * np.pi * 0.11 * t))
-    right = out * (1 - 0.04 * np.sin(2 * np.pi * 0.11 * t))
-    return np.stack([left, right]) * 0.32
+def music(dur: float, lift_at: float | None = None) -> np.ndarray:
+    """The score. See score.py — a written progression with voice leading and an
+    arrangement that lifts at the film's turn, not a four-chord drone."""
+    return compose(dur, lift_at=lift_at)
 
 
 def tap(vol: float = 0.5, tone: float = 3200, dur: float = 0.05) -> np.ndarray:
@@ -227,7 +204,7 @@ def main() -> None:
     music_path = os.path.join(args.out, f"{args.video}-music.wav")
     sfx_path = os.path.join(args.out, f"{args.video}-sfx.wav")
 
-    write_wav(music_path, music(cfg["duration"]))
+    write_wav(music_path, music(cfg["duration"], cfg.get("lift_at")))
     write_wav(sfx_path, sfx(cfg))
     print(f"wrote {music_path}")
     print(f"wrote {sfx_path}")

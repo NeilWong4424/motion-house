@@ -35,16 +35,16 @@ import { CORAL, CREAM, INK, KICKER, LAUNCH_BADGE, TAGLINE, WORDMARK } from "../b
 // Cast/figures continue the launch film: Adam Haris (U-12), Puan Aida his
 // mother, RM80 June fee, jersey home M at RM65.
 
-const H = 75;    // hook
+const H = 100;   // hook — the reference never flashes a card
 const LOGIN = 180;
 const PHONE = 210;
-const CARD1 = 66;  // the link payoff
+const CARD1 = 100; // the link payoff — held, not flashed
 const NAME = 180;
 const PORTAL = 180;
 const SESI = 180;   // log attendance
 const BIL = 210;    // pay bill
 const KEDAI = 210;  // buy merchandise
-const CARD2 = 66;
+const CARD2 = 100;
 const CLOSE = 130;
 
 const AT_LOGIN = H;
@@ -225,62 +225,42 @@ const Close: React.FC = () => {
 };
 
 // =============================================================================
-// Shot breakdown (fen jing)
+// Framing
 // =============================================================================
-// Every scene used to be one static wide take for 6+ seconds while the phone
-// itself slowly scaled. Now the phone is locked and the CAMERA does the work:
-// establish wide, cut in on the thing that matters, hold, pull back.
+// Measured against the Dispatch reference (Recording 2026-07-17 073006.mp4):
+// it makes 6 cuts in 36s (~1 per 6s) and uses only TWO framings for the whole
+// film. It never punches in. What ffmpeg reads as "cuts" is the CONTENT
+// changing inside a locked frame — a dialog opens, a window swaps — while the
+// camera and the phone sit perfectly still.
 //
-// Coordinates are composition space. The phone screen spans y 57..1863; inside
-// it the glass auth card sits ~y 960, portal cards ~y 700, sheets ~y 1500.
-const S_LOGIN = [
-  { until: 30 },                                // wide: the app, the ball, the shell
-  { until: 115, x: 540, y: 1010, scale: 1.15 }, // in: the welcome + buttons
-  { until: 150, x: 540, y: 1075, scale: 1.15 }, // reframe low: the Google tap
-  { until: LOGIN },                             // pull back
-];
+// A first pass here added 3-4 punch-ins per scene: 19 cuts in 56s, twice the
+// reference's rate. It read as choppy, not premium. The lesson: 分镜 is not
+// "more shots". Confidence is holding.
+//
+// So: one static framing per scene, held 6-7s, and the beat is carried by
+// content arriving (text typing, a card landing, a sheet sliding up). The only
+// camera move in the film is the portal payoff, where the travel means
+// something.
+const S_STATIC = [{ until: 99999 }];
 
-const S_PHONE = [
-  { until: 25 },
-  { until: 140, x: 540, y: 980, scale: 1.15 },  // in: watch the number typed
-  { until: 172, x: 540, y: 1080, scale: 1.15 }, // reframe low: the Seterusnya tap
-  { until: PHONE },
-];
-
-const S_NAME = [
-  { until: 25 },
-  { until: 125, x: 540, y: 980, scale: 1.15 },
-  { until: 158, x: 540, y: 1080, scale: 1.15 },
-  { until: NAME },
-];
-
-// The payoff: hold wide so Adam's card LANDS in an empty frame, then ease in.
+// The one exception: Adam's card lands in an empty frame, then the camera eases
+// in — the move IS the payoff, so it earns its keep.
 const S_PORTAL = [
-  { until: 55 },
-  { until: 150, x: 540, y: 760, scale: 1.15, via: "move" as const, moveFrames: 28 },
-  { until: PORTAL },
-];
-
-// Sheets: establish, settle on the sheet, reframe onto the action, back off so
-// the result lands in view.
-const sheetShots = (dur: number, tapAt: number) => [
-  { until: 34 },
-  { until: tapAt - 20, x: 540, y: 1430, scale: 1.15 },
-  { until: tapAt + 40, x: 540, y: 1560, scale: 1.15 },
-  { until: dur, x: 540, y: 1430, scale: 1.15 },
+  { until: 60 },
+  { until: PORTAL, x: 540, y: 800, scale: 1.12, via: "move" as const, moveFrames: 40 },
 ];
 
 export const ParentOnboarding: React.FC = () => (
   <AbsoluteFill style={{ background: CREAM }}>
     <Sequence durationInFrames={H}><FadeIn><Serif lines={["Anak dah didaftar.", "Sekarang giliran anda."]} /></FadeIn></Sequence>
-    <Sequence from={AT_LOGIN} durationInFrames={LOGIN}><FadeIn><Shot shots={S_LOGIN}><PhoneFrame canvas={CREAM}><LoginScene /></PhoneFrame></Shot></FadeIn></Sequence>
-    <Sequence from={AT_PHONE} durationInFrames={PHONE}><FadeIn><Shot shots={S_PHONE}><PhoneFrame canvas={CREAM}><PhoneScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_LOGIN} durationInFrames={LOGIN}><FadeIn><Shot shots={S_STATIC}><PhoneFrame canvas={CREAM}><LoginScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_PHONE} durationInFrames={PHONE}><FadeIn><Shot shots={S_STATIC}><PhoneFrame canvas={CREAM}><PhoneScene /></PhoneFrame></Shot></FadeIn></Sequence>
     <Sequence from={AT_CARD1} durationInFrames={CARD1}><FadeIn><Serif size={62} lines={["Nombor anda kunci.", "Anak anda muncul."]} /></FadeIn></Sequence>
-    <Sequence from={AT_NAME} durationInFrames={NAME}><FadeIn><Shot shots={S_NAME}><PhoneFrame canvas={CREAM}><NameScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_NAME} durationInFrames={NAME}><FadeIn><Shot shots={S_STATIC}><PhoneFrame canvas={CREAM}><NameScene /></PhoneFrame></Shot></FadeIn></Sequence>
     <Sequence from={AT_PORTAL} durationInFrames={PORTAL}><FadeIn><Shot shots={S_PORTAL}><PhoneFrame canvas={CREAM}><PortalScene /></PhoneFrame></Shot></FadeIn></Sequence>
-    <Sequence from={AT_SESI} durationInFrames={SESI}><FadeIn><Shot shots={sheetShots(SESI, 110)}><PhoneFrame canvas={CREAM}><SesiScene /></PhoneFrame></Shot></FadeIn></Sequence>
-    <Sequence from={AT_BIL} durationInFrames={BIL}><FadeIn><Shot shots={sheetShots(BIL, 128)}><PhoneFrame canvas={CREAM}><BilScene /></PhoneFrame></Shot></FadeIn></Sequence>
-    <Sequence from={AT_KEDAI} durationInFrames={KEDAI}><FadeIn><Shot shots={sheetShots(KEDAI, 138)}><PhoneFrame canvas={CREAM}><KedaiScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_SESI} durationInFrames={SESI}><FadeIn><Shot shots={S_STATIC}><PhoneFrame canvas={CREAM}><SesiScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_BIL} durationInFrames={BIL}><FadeIn><Shot shots={S_STATIC}><PhoneFrame canvas={CREAM}><BilScene /></PhoneFrame></Shot></FadeIn></Sequence>
+    <Sequence from={AT_KEDAI} durationInFrames={KEDAI}><FadeIn><Shot shots={S_STATIC}><PhoneFrame canvas={CREAM}><KedaiScene /></PhoneFrame></Shot></FadeIn></Sequence>
     <Sequence from={AT_CARD2} durationInFrames={CARD2}><FadeIn><Serif size={62} lines={["Semua dari", "telefon anda."]} /></FadeIn></Sequence>
     <Sequence from={AT_CLOSE} durationInFrames={CLOSE}><FadeIn><Close /></FadeIn></Sequence>
   </AbsoluteFill>
