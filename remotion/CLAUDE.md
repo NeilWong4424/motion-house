@@ -14,7 +14,7 @@ also the `/video` command.
 (Apple keynote / LoL Worlds explainer) as concrete, checkable rules.
 
 **MyBola is the first product, not the house style.** It's a Malaysian football
-academy management SaaS; its current cut is v7 (~46s, composition id `MyBolaV4`),
+academy management SaaS; its current cut is v7 (~49s, composition id `MyBolaV4`),
 with `MyBolaLaunch` the older v3. Its "warm editorial" look (cream/serif/coral, the
 two-layer phone rule) lives in `products/mybola/design.ts` as **one design language
 among many** — the MyBola-specific rules below describe *that* language, not a law
@@ -174,9 +174,6 @@ edit. The instruments match the design language: felt piano (voice), bowed strin
 (bed), upright bass (floor), glass bell (the accent, used once — scarcity, exactly
 like coral in the visual layer). No drums: a pulse would make it a promo.
 
-**Known gap:** MyBolaV4's typing/pop cue times still match the older 34.4s layout,
-not v7's 46.1s scene boundaries, so they no longer land on their sends. Realigning
-those cues is a tracked follow-up (see `docs/`).
 
 ## Verify before declaring done
 
@@ -195,13 +192,16 @@ video — compare frames by eye, and treat SSIM ≥ ~0.9997 as "within renderer 
 **Read `docs/02-polish-roadmap.md` before starting any of these** — it carries the
 reference analysis, the portrait-framing constraints, and per-step done criteria.
 
-1. Texture & depth: grid behind chat, gradient washes, bigger soft shadow. **← next**
-2. Evidence bubbles: AI sends a real app screen (bills list / attendance) in chat.
+1. ~~Texture & depth~~ — DONE (shadow was real; grid and washes were invented).
+2. ~~Evidence bubbles~~ — DONE (`RealBubble` media props + `BilDeskPage` in the
+   desktop shell, scaled into the chat; Scene A lengthened, cut now ~49s).
 3. Multi-device scene: phone + admin portal side by side, coral squiggle joining
-   them. Real portal source exists at `flutter/lib/portal/admin/academy/*_content.dart`.
+   them. Real portal source exists at `flutter/lib/portal/admin/academy/*_content.dart`;
+   Step 2 already proved the portal renders at arbitrary scale. **← next**
 4. Simulated cursor interaction on the desktop side (menu click, export flow).
-5. Hand-tune spring configs per shot in Studio; consider longer scenes (ours 46s vs
-   the reference's 1:13). If scene lengths move, update `duration` in `VIDEOS`.
+5. Hand-tune spring configs per shot in Studio; consider longer scenes (ours 49s vs
+   the reference's 1:13). If scene lengths move, update `duration` AND `cuts` in `VIDEOS`.
 6. Real Axiforma font files if licensed (swap in `public/fonts/` + the PJS loader
    in `shared/ui/theme.tsx`).
-7. Realign MyBolaV4's SFX cue times to v7's scene boundaries (see Audio above).
+7. ~~Realign MyBolaV4's SFX cue times~~ — DONE alongside step 2 (cues re-derived
+   from launchV4.tsx frames; V4 now also has `cuts`/`payoff_at`).

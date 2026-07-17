@@ -73,35 +73,43 @@ here were invented.
 
 ---
 
-## Step 2 — Evidence bubbles
+## Step 2 — Evidence bubbles — DONE
 
-**Why second:** medium effort, strong credibility boost. "Show, don't tell" is a big
-part of why the reference reads as a product demo rather than a mockup.
+**Status: shipped.** Measured first this time, per the Step 1 lesson.
 
-**The move:** the AI's reply includes a real app screen as an image inside the chat
-bubble (reference `ref_22.png`: a "Cueform/Library" screenshot inline in chat).
+**What the reference actually does (measured on `ref_22.png`):** the screenshot is
+NOT inside the bubble's padding — it's a **separate rounded block below the reply
+bubble**, left-aligned with it. On their ~500px phone: image 269px wide (~54% of
+the interior), landscape aspect ~1.35 (it's a *desktop* app screen sent into a
+phone chat), corner radius ~13px, ~6px gap to the bubble above. Scaled to our
+1080px interior: 585px wide, radius 28, 13px gap.
 
-**Approach**
+**What shipped:**
 
-- Add an `ImageBubble` (or extend `RealBubble`) in `src/shared/ui/chat.tsx` — a
-  media body with the app's bubble tint/corner language. `FileChip` and `WADoc` are
-  the existing precedents for media bodies; match their construction.
-- The screen shown must be **real UI, recreated in code** per the code-exact-UI
-  rule — not a screenshot file, not an invented card. Good candidates that already
-  exist in the Flutter source:
-  - `portal/admin/academy/bills/bills_content.dart` — the bills list, pairs with
-    Scene A's "28 bil dihantar"
-  - `portal/admin/academy/sessions/sessions_content.dart` — attendance, pairs with
-    Scene B's "22/24 hadir"
-- Render that screen small inside the bubble (the existing `SC` scale trick and
-  `transform: scale()` on a full-width subtree is the established pattern — see
-  `PhoneFrame`'s inner 1080-wide scaled container).
+- `RealBubble` in `src/shared/ui/chat.tsx` grew optional `media` /
+  `mediaAtFrame` / `mediaWidth` / `mediaAspect` props: bubble → media block →
+  caption, with the media on its own entrance spring so the screenshot lands as
+  its own beat after the text. One deviation from app tokens, deliberate: the
+  media frame's hairline is `rgba(255,255,255,0.14)`, not the app border
+  `#1A1A1A`, because the app border is invisible black-on-black against the chat
+  bg (the reference never had this problem — its chat is light).
+- `BilDeskPage` in `products/mybola/ui/desktop.tsx`: the desktop Bil portal page
+  recreated from `bills_content.dart` + `selector_widgets.dart` chip geometry
+  (narrow day chips 48x71 r6, status chips h32, wide bill rows h48, 6px gaps,
+  10px page padding), composed in the existing `DesktopShell`. Rendered at
+  1280x950 (the measured ~1.35 aspect) and scaled 0.457 into the bubble.
+- Scene A: the shot lands at f278 after "28 bil dihantar." (f243); the action
+  sheet moved 268→358 and the scene lengthened 330→430f so nothing is crammed.
+  Cut is now 49.43s.
+- Audio: `make_audio.py` MyBolaV4 got the new duration **and** — since the
+  boundaries moved anyway — the carried-over-bug fix: cue times re-derived from
+  the actual launchV4.tsx frame constants, plus real `cuts`/`payoff_at` (the V4
+  entry predated the scored-to-the-cut system and had neither). Verified mix:
+  mean −39.6 dB / max −19.0 dB against the reference's −37/−18; typing window
+  peaks −19.5 dB.
 
-**Watch out:** this adds content to a scene whose frame budget is already tuned.
-Either give the bubble its own beat or lengthen the scene — don't cram it.
-
-**Done when:** the evidence bubble reads as the real app at a glance, and the scene
-still breathes.
+This also banked most of Step 3's prerequisite: the desktop portal now renders at
+arbitrary scale inside another surface.
 
 ---
 
@@ -211,15 +219,15 @@ wrap boundary (the omnibar hint, longer bubbles) after swapping.
 
 ---
 
-## Carried-over bug (independent of these steps)
+## Carried-over bug — FIXED in Step 2
 
-**SFX cue times are stale.** `products/mybola/audio/make_audio.py` → `VIDEOS`
-→ `MyBolaV4` → `typing`/`pops` timestamps were authored against the older 34.4s
-layout and were never realigned to v7's 46.1s scene boundaries, so taps and pops no
-longer land on their sends. The music bed is correct (`duration: 46.2`). Fix by
-deriving cue times from the scene-boundary frame constants in `launchV4.tsx` rather
-than hand-typing seconds. Worth doing alongside Step 5, since that step may move the
-boundaries anyway.
+**SFX cue times were stale** (authored against the old 34.4s layout). Fixed
+alongside Step 2 since that step moved the boundaries anyway: MyBolaV4's cue
+table is now derived from the frame constants in `launchV4.tsx` (the derivation
+is recorded as a comment above the entry), and the entry gained `cuts` +
+`payoff_at` so the score lands chord changes on the film's actual scene cuts
+like V8/Parent already did. **Recompute the whole entry whenever a scene length
+changes.**
 
 ---
 

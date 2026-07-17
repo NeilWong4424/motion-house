@@ -14,14 +14,25 @@ import { SC, UIFONT, ui, uiText } from "./theme";
 // =============================================================================
 // AI: primary 20% tint, corners 12/12/4(bl)/12. Mine: #1C1C1E, 12/12/12/4(br).
 // Caption "Pengurus · 9:41 AM" beneath in meta.
+//
+// `media` is the evidence-bubble move: an app screen sent as part of the message,
+// rendered as its own rounded block between the bubble and the caption. Geometry
+// measured from the Dispatch reference (ref_22): left-aligned with the bubble,
+// ~54% of the phone's interior width (585px of 1080), landscape ~1.35, corner
+// radius ~13px on their 500px phone → 28px at our scale, small gap above. It gets
+// its own atFrame so the screenshot can land as its own beat after the text.
 export const RealBubble: React.FC<{
   mine?: boolean; atFrame: number; caption: string; children: React.ReactNode; maxWidth?: number;
-}> = ({ mine = false, atFrame, caption, children, maxWidth = 810 }) => {
+  media?: React.ReactNode; mediaAtFrame?: number; mediaWidth?: number; mediaAspect?: number;
+}> = ({ mine = false, atFrame, caption, children, maxWidth = 810, media, mediaAtFrame, mediaWidth = 585, mediaAspect = 1.347 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   if (frame < atFrame - 3) return null;
   const s = spring({ frame: frame - atFrame, fps, config: { damping: 17, stiffness: 135 } });
   const r = 12 * 2.7, rs = 4 * 2.7;
+  const mAt = mediaAtFrame ?? atFrame;
+  const showMedia = media != null && frame >= mAt - 3;
+  const ms = showMedia ? spring({ frame: frame - mAt, fps, config: { damping: 17, stiffness: 135 } }) : 0;
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: mine ? "flex-end" : "flex-start", opacity: s, transform: `translateY(${interpolate(s, [0, 1], [26, 0])}px)`, marginBottom: 27 }}>
       <div style={{
@@ -30,6 +41,16 @@ export const RealBubble: React.FC<{
         borderRadius: mine ? `${r}px ${r}px ${rs}px ${r}px` : `${r}px ${r}px ${r}px ${rs}px`,
         padding: 27,
       }}>{children}</div>
+      {showMedia ? (
+        <div style={{
+          width: mediaWidth, height: mediaWidth / mediaAspect, marginTop: 13,
+          // Bubble chrome, not app UI: the app-token border (#1A1A1A) vanishes
+          // against the black chat bg, so the frame uses a visible hairline.
+          borderRadius: 28, overflow: "hidden", border: "1px solid rgba(255,255,255,0.14)",
+          position: "relative", background: ui.black,
+          opacity: ms, transform: `translateY(${interpolate(ms, [0, 1], [26, 0])}px)`,
+        }}>{media}</div>
+      ) : null}
       <div style={{ ...uiText.meta, marginTop: 8, paddingLeft: 6, paddingRight: 6 }}>{caption}</div>
     </div>
   );

@@ -111,6 +111,81 @@ const Sidebar: React.FC<{ active: PageId; user: string }> = ({ active, user }) =
  * The desktop portal shell. `children` is the routed page content; `aside` is
  * the right-hand chart panel (320 in the real layout).
  */
+// =============================================================================
+// Bil page — recreated from bills_content.dart + selector_widgets.dart
+// =============================================================================
+// Sliver structure: SelectorSectionLabel('TARIKH') → day chips → 'STATUS' →
+// status chips → 'INVOIS' → bill list. Chip geometry from ChipShape:
+//   narrow: 48x71, vertical pad 6, radius 6, top-aligned (day chips)
+//   chip:   shrink-wrap, h32, horizontal pad 10, radius 6 (status chips)
+//   wide:   full width, h48, horizontal pad 10, radius 6 (bill rows)
+// Chips sit 6 apart; page padding 10. Day chip: month abbr (meta), day (label),
+// overdue count (meta, error) when positive. Status chips show 'Label (count)'
+// tinted by the status accent, none selected in the unfiltered state.
+
+const DeskSectionLabel: React.FC<{ label: string }> = ({ label }) => (
+  <div style={{ padding: 10 }}><span style={deskText.meta}>{label}</span></div>
+);
+
+const DayChip: React.FC<{ month: string; day: string; overdue?: string; on?: boolean }> = ({ month, day, overdue, on }) => (
+  <div style={{ width: 48, height: 71, borderRadius: 6, background: on ? ui.primary : ui.secondary, padding: "6px 0", boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+    <span style={{ ...deskText.meta, color: on ? ui.white : ui.tertiary }}>{month}</span>
+    <span style={deskText.label}>{day}</span>
+    {overdue ? <span style={{ ...deskText.meta, color: ui.error }}>{overdue}</span> : null}
+  </div>
+);
+
+const StatusChip: React.FC<{ label: string; accent: string }> = ({ label, accent }) => (
+  <div style={{ height: 32, borderRadius: 6, background: ui.secondary, padding: "0 10px", display: "flex", alignItems: "center", flexShrink: 0 }}>
+    <span style={{ ...deskText.label, color: accent }}>{label}</span>
+  </div>
+);
+
+const BillDeskRow: React.FC<{ desc: string; name: string; amount: string; outstanding?: boolean }> = ({ desc, name, amount, outstanding }) => (
+  <div style={{ height: 48, borderRadius: 6, background: ui.secondary, padding: "0 10px", display: "flex", alignItems: "center", justifyContent: "space-between", boxSizing: "border-box" }}>
+    <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <span style={{ ...deskText.label, whiteSpace: "nowrap" }}>{desc}</span>
+      <span style={{ ...deskText.meta, whiteSpace: "nowrap" }}>{name}</span>
+    </div>
+    <span style={{ ...deskText.label, color: outstanding ? ui.error : ui.white, fontVariantNumeric: "tabular-nums" }}>{amount}</span>
+  </div>
+);
+
+/**
+ * The Bil page in the desktop shell — the evidence screenshot the Pengurus
+ * sends after "28 bil dihantar." Figures tie to Scene A: 28 Jun bills at RM80
+ * (the action sheet's RM2,240 total), 3 outstanding reminders.
+ */
+export const BilDeskPage: React.FC = () => (
+  <DesktopShell active="bil" pageTitle="Bil">
+    <DeskSectionLabel label="TARIKH" />
+    <div style={{ display: "flex", gap: 6, padding: "0 10px" }}>
+      <DayChip month="Jun" day="2" overdue="3" on />
+      <DayChip month="Jun" day="1" />
+      <DayChip month="Mei" day="31" />
+    </div>
+    <DeskSectionLabel label="STATUS" />
+    <div style={{ display: "flex", gap: 6, padding: "0 10px" }}>
+      <StatusChip label="Belum Bayar (3)" accent={ui.error} />
+      <StatusChip label="Dihantar (28)" accent={ui.primary} />
+    </div>
+    <DeskSectionLabel label="INVOIS" />
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "0 10px" }}>
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Adam Haris" amount="RM80.00" outstanding />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Nur Aisyah" amount="RM80.00" outstanding />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Haris Idris" amount="RM80.00" outstanding />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Siti Sarah" amount="RM80.00" />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Danial Zikri" amount="RM80.00" />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Aiman Syafiq" amount="RM80.00" />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Irfan Hakim" amount="RM80.00" />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Amir Danish" amount="RM80.00" />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Hafiz Iman" amount="RM80.00" />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Zharif Aiman" amount="RM80.00" />
+      <BillDeskRow desc="Yuran Bulanan Jun" name="Ryan Lee" amount="RM80.00" />
+    </div>
+  </DesktopShell>
+);
+
 export const DesktopShell: React.FC<{
   children: React.ReactNode;
   aside?: React.ReactNode;

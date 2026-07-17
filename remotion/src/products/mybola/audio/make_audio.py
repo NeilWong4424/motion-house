@@ -28,16 +28,39 @@ SR = 48000
 # typing:   (start, end[, rate]) bursts of keyboard taps before a send.
 # pops:     (freq, vol, at) send/receive blips.
 #
-# NOTE: MyBolaV4's cue times below were authored against the older 34.4s layout
-# and have NOT been realigned to the current ~46.1s v7 scene boundaries — the
-# taps/pops no longer land on their sends. Realigning them is a tracked
-# follow-up; `duration` is correct so the music bed covers the whole video.
 VIDEOS: dict[str, dict] = {
+    # v4 (the current cut, 49.43s after the Step-2 evidence bubble lengthened
+    # Scene A 330→430f). Cues derived from videos/launchV4.tsx at 30fps:
+    #   sceneA f90   typing f+8..84, send f+95, reply f+140, send f+195,
+    #                reply f+243, evidence shot f+278, action sheet f+358
+    #   sceneB f520  voice f+20, reply f+100, send f+195, reply f+245
+    #   sceneC f967  typing f+8..53, send f+60, reply f+105, doc f+168, reply f+230
     "MyBolaV4": {
-        "duration": 46.2,
-        "typing": [(5.35, 5.80, 11), (7.00, 8.10, 9), (12.70, 13.12, 11), (20.05, 20.30, 11)],
-        "pops": [(700, 0.5, 5.83), (520, 0.45, 8.33), (520, 0.45, 10.67), (700, 0.5, 13.17),
-                 (700, 0.45, 20.33), (520, 0.42, 21.00), (880, 0.35, 29.4)],
+        "duration": 49.6,  # timeline is 49.43s; a little tail so the bed never ends early
+        # Scene-boundary times — chord changes land on these.
+        "cuts": [3.0, 17.33, 19.53, 30.03, 32.23, 42.9, 45.1],
+        "payoff_at": 45.1,  # the cut to KINI DILANCARKAN — the launch itself
+        "typing": [
+            (3.27, 5.77, 9),    # sceneA: register-Adam request typed
+            (9.07, 9.43, 11),   # sceneA: send-bills request
+            (32.50, 33.97, 9),  # sceneC: WhatsApp order typed
+        ],
+        "pops": [
+            (700, 0.50, 6.17),   # sceneA send 1
+            (520, 0.45, 7.67),   # sceneA reply 1
+            (700, 0.50, 9.50),   # sceneA send 2
+            (520, 0.45, 11.10),  # sceneA reply 2 — "28 bil dihantar."
+            (520, 0.42, 12.27),  # evidence screenshot lands
+            (520, 0.40, 14.93),  # action sheet slides up
+            (700, 0.45, 18.00),  # sceneB voice note sent
+            (520, 0.42, 20.67),  # sceneB attendance reply
+            (700, 0.45, 23.83),  # sceneB schedule request sent
+            (520, 0.42, 25.50),  # sceneB schedule reply
+            (700, 0.50, 34.23),  # sceneC WA send
+            (520, 0.45, 35.73),  # sceneC WA reply
+            (700, 0.45, 37.83),  # sceneC WA receipt doc
+            (520, 0.42, 39.90),  # sceneC WA confirm
+        ],
     },
     # v8 — cues derived from the actual scene table in videos/launchV8.tsx.
     # Recompute these whenever a scene length changes: a pop even 3 frames off

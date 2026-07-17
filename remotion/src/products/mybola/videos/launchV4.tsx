@@ -4,6 +4,7 @@ import { FadeIn, SERIF, useFonts } from "../../../shared/narration/primitives";
 import { ActionSheet, Omnibar, RealBubble } from "../../../shared/ui/chat";
 import { StatusBar } from "../../../shared/ui/phone";
 import { AppScreen, PhoneFrame } from "../ui/phone";
+import { BilDeskPage } from "../ui/desktop";
 import { WABubble, WADoc, WAScreen } from "../../../shared/ui/whatsapp";
 import { defineVideo } from "../../../shared/engine/types";
 import { ui, uiText } from "../appTheme";
@@ -13,7 +14,7 @@ import { CORAL, CREAM, INK, KICKER, LAUNCH_BADGE, TAGLINE, WORDMARK } from "../b
 // jadual, kedai, WhatsApp inbox onboarding. No logo anywhere.
 
 const S1 = 90;
-const A = 330;
+const A = 430;
 const C1 = 66;
 const B = 315;
 const C2 = 66;
@@ -69,15 +70,25 @@ const ChatShell: React.FC<{ children: React.ReactNode; header?: React.ReactNode;
 
 // ---------- Scene A: member + bil ----------
 const P1 = "Daftarkan pemain baru: Adam Haris, U-12. No. ibu: 012-345 6789";
+
+// The evidence screenshot: the desktop Bil portal rendered at its own scale and
+// shrunk into the bubble — the reference's move (a real desktop app screen sent
+// inline in chat, ref_22). 1280x950 matches the measured ~1.35 landscape aspect.
+const BilShot: React.FC = () => (
+  <div style={{ width: 1280, height: 950, transform: `scale(${585 / 1280})`, transformOrigin: "top left", position: "relative" }}>
+    <BilDeskPage />
+  </div>
+);
+
 const SceneA: React.FC = () => {
   const frame = useCurrentFrame();
   // Transcript dims to 0.2 while the action sheet is up (chat_content.dart behavior).
-  const dim = interpolate(frame, [265, 274], [1, 0.2], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const dim = interpolate(frame, [355, 364], [1, 0.2], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
     <ChatShell omnibar={
       <>
         <ActionSheet
-          atFrame={268}
+          atFrame={358}
           title="Bil Bulan Jun"
           subtitle="U-12 · 28 ahli"
           fields={[
@@ -94,7 +105,7 @@ const SceneA: React.FC = () => {
         <RealBubble mine atFrame={95} caption="Anda · 9:41 AM"><span style={uiText.body}>{P1}</span></RealBubble>
         <RealBubble atFrame={140} caption="Pengurus · 9:41 AM"><span style={uiText.body}>Siap — profil Adam dicipta. Yuran pendaftaran RM50 diinvois kepada ibu Adam.</span></RealBubble>
         <RealBubble mine atFrame={195} caption="Anda · 9:42 AM"><span style={uiText.body}>Hantar bil bulan Jun kepada semua ahli U-12</span></RealBubble>
-        <RealBubble atFrame={243} caption="Pengurus · 9:42 AM"><span style={uiText.body}>28 bil dihantar.</span></RealBubble>
+        <RealBubble atFrame={243} caption="Pengurus · 9:42 AM" media={<BilShot />} mediaAtFrame={278}><span style={uiText.body}>28 bil dihantar.</span></RealBubble>
       </div>
     </ChatShell>
   );
