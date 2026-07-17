@@ -38,7 +38,15 @@ export const PhoneFrame: React.FC<{
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
         <div style={{ position: "absolute", width: 1300, height: 1300, borderRadius: "50%", background: "radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 65%)" }} />
         <div style={{ position: "absolute", bottom: 46, width: 620, height: 60, borderRadius: "50%", background: "radial-gradient(ellipse, rgba(31,27,22,0.30) 0%, rgba(31,27,22,0) 70%)", filter: "blur(6px)" }} />
-        <div style={{ width: 902, height: 1836, borderRadius: 96, background: "#0A0A0B", padding: 15, boxSizing: "border-box", border: `1px solid ${rim}` }}>
+        {/* Ambient shadow. Measured from the reference film: the cream darkens
+            ~11 luminance at the device edge and falls off over ~18px on a ~500px
+            phone. Ours is 902px, so the falloff scales to ~32px. Without this
+            the cream met the black body in a single pixel — a 184-luminance
+            cliff — and the phone read as a sticker pasted on the page rather
+            than an object sitting in space. Warm-tinted (the ink, not grey), low
+            alpha, large blur: a tight dark shadow reads cheap; a wide soft one
+            reads as air. */}
+        <div style={{ width: 902, height: 1836, borderRadius: 96, background: "#0A0A0B", padding: 15, boxSizing: "border-box", border: `1px solid ${rim}`, boxShadow: "0 8px 28px rgba(31,27,22,0.06), 0 20px 56px rgba(31,27,22,0.05), 0 2px 8px rgba(31,27,22,0.04)" }}>
           <div style={{ width: 872, height: 1806, borderRadius: 82, overflow: "hidden", position: "relative", background: ui.black }}>
             <div style={{ width: 1080, height: 2237, transform: "scale(0.8074)", transformOrigin: "top left", position: "absolute", top: 0, left: 0 }}>
               {children}

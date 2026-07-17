@@ -37,38 +37,39 @@ every future product/video inherits it. That's why the restructure went first.
 
 ---
 
-## Step 1 — Texture & depth
+## Step 1 — Texture & depth — DONE (and two thirds of it was wrong)
 
-**Why first:** cheapest change with the widest reach. It lifts every existing scene
-at once without touching timeline, copy, or scene content.
+**Status: shipped.** But only one of the three planned changes survived contact
+with a measurement, which is worth recording.
 
-**Surfaces**
+I wrote this step from *looking* at compressed reference frames. Before building
+it I measured them instead. Two of the three items turned out to be things I
+thought I saw:
 
-- `src/shared/ui/phone.tsx` → `PhoneFrame`. Already has the seeds: a white radial
-  glow and a single 620x60 shadow ellipse.
-- `src/shared/ui/phone.tsx` → `AppScreen` — the dark chat canvas, where the grid
-  belongs (the reference's grid sits *inside* the phone, behind the chat).
-- `src/products/mybola/videos/launchV4.tsx` → `ChatShell`, only if layer order needs
-  adjusting so texture stays behind bubbles.
+| Planned | Measured reality |
+|---|---|
+| "Grid texture behind chat" | Their chat bg is `rgb(250,248,244)` — a **light** theme. Flattest patch std = 2.68 with row/col profile std 0.55/0.80: that's JPEG noise, **not a grid**. No periodic structure exists. And their light chat doesn't transfer to MyBola's dark one anyway. |
+| "Gradient washes in the cream field" | Their cream field measures **std 0.00 — perfectly flat**. There is no wash. |
+| "Bigger, softer phone shadow" | **Real, and we were badly short.** See below. |
 
-**Changes**
+**What shipped — the shadow.** Measured on the reference: the cream darkens
+**~11 luminance** at the device edge, falling off over **~18px** on a ~500px
+phone — a soft ambient shadow.
 
-1. **Bigger, softer phone shadow.** Replace the single ellipse with a layered drop
-   shadow: a wider, more-diffuse ellipse beneath, plus a soft ambient `box-shadow`
-   on the phone body. Warm-tinted `rgba(31,27,22,…)`, low opacity, large blur.
-2. **Gradient washes.** One or two soft low-alpha warm blooms in the cream field
-   around the phone, above the existing radial glow, rising from the bottom. Coral
-   stays OUT of the phone — these live in the narration layer only.
-3. **Grid texture behind chat.** Faint graph-paper grid as the backmost layer inside
-   `AppScreen`: CSS `repeating-linear-gradient` both axes, white at ~2-4% alpha over
-   the dark canvas, ~40-48px cells. Optional gentle vignette so it fades at edges.
-   Pure CSS — no asset, renders identically headless.
+Ours had **no side shadow at all**: cream met the black body in a single pixel,
+a **184-luminance cliff**. The phone read as a sticker pasted on the page rather
+than an object sitting in space. There was a bottom ellipse but nothing around
+the body.
 
-**Keep it subtle.** The reference textures are barely-there. Tune alphas low and
-judge on extracted frames, not in code.
+Fixed in `products/mybola/ui/phone.tsx` with a layered warm-tinted `box-shadow`
+(three passes: tight contact, mid, wide ambient). Tuned by measurement, not by
+eye: **depth 10.3 lum, falloff 22px** against the reference's 11 lum / ~18px
+(≈32px scaled to our 902px phone). Narration frames verified still flat
+(std 0.00) — matching the reference, which is also flat.
 
-**Done when:** in-phone chat frames (~6-8s) show the grid without looking noisy;
-narration frames unchanged except the cream wash; phone still doesn't move.
+**The lesson for the rest of this roadmap:** these steps were written by eyeballing
+a compressed recording. Measure each one before building it. Two of three items
+here were invented.
 
 ---
 

@@ -5,8 +5,9 @@ looks like a template and output that looks like it cost money. Read it before
 building a video; check against it before declaring one done.
 
 **The calibration bar:** Apple product launches (restraint, weight, enormous type,
-long holds) and League of Legends Worlds format explainers (energy, rhythm,
-confident graphic shapes). Both are premium. Neither is busy.
+long holds), League of Legends Worlds format explainers (energy, rhythm, confident
+graphic shapes), and Claude product launch films (warm minimalism, the product doing
+real work on screen, prose-like pacing). All three are premium. None of them is busy.
 
 ---
 
