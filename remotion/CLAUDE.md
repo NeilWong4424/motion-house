@@ -46,7 +46,7 @@ videos, and audio.
   renderable (`MyBolaLaunch`) but not built on the shared primitives
 - `public/fonts/` — Playfair Display (serif narration), Plus Jakarta Sans (UI stand-in
   for Axiforma), Inter
-- `docs/` — roadmap docs (e.g. `02-texture-and-depth.md`, the next quality step)
+- `docs/` — roadmap docs (`02-polish-roadmap.md` = the six-step quality plan)
 
 ### Adding a video (same product)
 
@@ -138,14 +138,16 @@ video — compare frames by eye, and treat SSIM ≥ ~0.9997 as "within renderer 
 
 ## Backlog (from Dispatch-reference gap analysis, priority order)
 
-1. Texture & depth: subtle grid/paper texture behind chat, soft gradient washes,
-   larger diffuse phone shadow. **← next; planned in `docs/02-texture-and-depth.md`**
-2. Evidence bubbles: AI sends an image message showing a real app screen
-   (bills list / attendance view) inside the chat.
-3. Multi-device scene: phone chat + laptop mockup with admin portal side by
-   side, one action flowing across both.
+**Read `docs/02-polish-roadmap.md` before starting any of these** — it carries the
+reference analysis, the portrait-framing constraints, and per-step done criteria.
+
+1. Texture & depth: grid behind chat, gradient washes, bigger soft shadow. **← next**
+2. Evidence bubbles: AI sends a real app screen (bills list / attendance) in chat.
+3. Multi-device scene: phone + admin portal side by side, coral squiggle joining
+   them. Real portal source exists at `flutter/lib/portal/admin/academy/*_content.dart`.
 4. Simulated cursor interaction on the desktop side (menu click, export flow).
-5. Hand-tune spring configs per shot in Studio (was impractical in sandbox).
+5. Hand-tune spring configs per shot in Studio; consider longer scenes (ours 46s vs
+   the reference's 1:13). If scene lengths move, update `duration` in `VIDEOS`.
 6. Real Axiforma font files if licensed (swap in `public/fonts/` + the PJS loader
    in `shared/ui/theme.tsx`).
 7. Realign MyBolaV4's SFX cue times to v7's scene boundaries (see Audio above).

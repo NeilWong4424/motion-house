@@ -108,6 +108,7 @@ fit a different product.
 
 ## Roadmap
 
-`remotion/docs/` holds the planned work. Next up:
-`02-texture-and-depth.md` — closing the quality gap to the Dispatch reference
-(grid texture behind chat, gradient washes, larger diffuse phone shadow).
+`remotion/docs/02-polish-roadmap.md` — the six-step plan to close the quality gap to
+the Dispatch reference, cheapest first: texture & depth, evidence bubbles,
+multi-device phone↔desktop, simulated cursor, spring tuning, real Axiforma. Each
+step ships on its own.
