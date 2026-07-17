@@ -1,11 +1,26 @@
-# Project-4 Product Video
+# Motion graphics studio
 
-Product launch videos, built as code (Remotion). Portrait 1080x1920 MP4, 30fps.
-Migrated from Claude Cowork for local development with VS Code + Claude Code.
+Text to motion graphic. You describe the video; **Claude Code directs it** —
+interviews the brief, proposes a design language, agrees a storyboard, builds it,
+then renders and critiques its own frames until it's worth shipping.
 
-The repo holds **many videos across many products**. MyBola (a Malaysian football
-academy management SaaS) is the first product; its current cut is v7, composition
-id `MyBolaV4`.
+Built as code (Remotion), so every frame is version-controlled, diffable, and
+re-renderable. Any style, any format — launch films, explainers, teasers, stings.
+Commercial-grade output is the bar: Apple keynote, LoL Worlds explainer.
+
+MyBola (a Malaysian football academy SaaS) is the first product in here — its
+"warm editorial" look is **one design language among many**, not the house style.
+
+## Make a video
+
+```
+claude
+> /video
+```
+
+Then answer the questions. Claude gates each stage, so you approve the look and the
+storyboard before a frame gets built. Plain chat works too — "make me a 30s teaser
+for X" runs the same flow.
 
 ## Contents
 
@@ -23,33 +38,43 @@ Python 3 + numpy are needed only for the audio synth script.
 
 ## How this repo is organised
 
-Two ideas run the whole thing:
+Three ideas run the whole thing:
 
 **1. A video is a `VideoDef` in a registry.** Each video exports
 `defineVideo({ id, component, durationInFrames })`. Its product lists it in
 `index.ts`, `shared/engine/registry.ts` collects every product's list, and
 `Root.tsx` turns each entry into a Remotion composition. Nothing else needs editing.
 
-**2. `shared/` is brand-neutral; `products/<name>/` owns the brand.** Shared code
-is generic chrome only — phone frame, status bar, chat bubble mechanics, WhatsApp,
-serif narration primitives. Anything that says *MyBola* — its colours, its wordmark,
-its app UI — lives under `products/mybola/`.
+**2. A design language is data.** Palette (by *role* — `accent`, not "coral"), type
+specs, motion profile, depth. Scenes read from it, so the same scene code carries
+any brand. Two videos on this engine should look like different studios made them.
+
+**3. `shared/` is style-agnostic; `products/<name>/` owns the look.** Shared code
+never assumes a palette, font, or format. Anything style-specific — MyBola's phone
+staging, its app UI — lives under its product.
 
 ```
 remotion/src/
   shared/
-    engine/      VideoDef + registry
-    narration/   serif layer (fonts, FadeIn, Camera) — colours passed in
-    ui/          theme, chat, phone, whatsapp — generic chrome
+    engine/      VideoDef + registry + format presets
+    design/      DesignLanguage type + font loader
+    motion/      easing/springs, reveal kit, transitions  <- the craft layer
+    ui/          generic app chrome (chat, status bar, WhatsApp)
+    narration/   serif layer + legacy font loader
   products/
     mybola/
-      brand.ts     cream/ink/coral + kicker, wordmark, tagline
+      design.ts    its DesignLanguage ("warm editorial")
+      brand.ts     cream/ink/coral + wordmark, tagline
       appTheme.ts  app tokens (from the Flutter source)
+      ui/          ITS device staging (PhoneFrame)
       videos/      one file per cut, each exporting a VideoDef
       audio/       per-video music + SFX synth
       index.ts     this product's video list
   legacy/        v3-era code, still renderable, not on the shared primitives
 ```
+
+Formats: `PORTRAIT` (9:16), `LANDSCAPE` (16:9), `SQUARE`, `CINEMA` (21:9) — spread
+one into `defineVideo`.
 
 ## Daily workflow
 
@@ -77,38 +102,42 @@ In another terminal run `claude` to make changes conversationally —
 
 ## Adding another video (same product)
 
-1. Add `src/products/mybola/videos/<name>.tsx`. Build the timeline from
-   `shared/narration` + `shared/ui`; read brand values from `../brand`.
+1. Add `src/products/<product>/videos/<name>.tsx`. Compose from `shared/motion`;
+   read colours/fonts/timing from that product's `design.ts`.
 2. Export a `VideoDef`: `defineVideo({ id: "MyBolaTeaser", component, durationInFrames })`.
-3. List it in `src/products/mybola/index.ts`.
+   Ids allow letters/digits/`-` only — no underscores.
+3. List it in that product's `index.ts`.
 4. If it needs a score, add an entry to `VIDEOS` in `audio/make_audio.py`.
 
 It now shows in Studio and renders via `npm run render MyBolaTeaser out/teaser.mp4`.
 
-## Adding another product
+## Adding another product / design language
 
-Create `src/products/<name>/` with its own `brand.ts`, `appTheme.ts`, `videos/`
-and `index.ts`, then import its `videos` into `shared/engine/registry.ts`. Nothing
-in `products/mybola/` changes.
+Create `src/products/<name>/` with its own `design.ts`, `videos/` and `index.ts`,
+then import its `videos` into `shared/engine/registry.ts`. Nothing in other products
+changes. Anything style-specific — device staging, app UI — lives in that folder.
 
-Per the code-exact-UI rule, a new product recreates **its own** app UI inside its
-folder — `shared/ui/` only carries generic chrome. Don't bend MyBola's app UI to
-fit a different product.
+Fonts: only families with woff2 in `remotion/public/fonts/` work (headless Chrome,
+no network). Copy weights from `node_modules/@fontsource/<family>/files/` and name
+them in the design language.
 
 ## Rules that matter (Claude Code reads these from remotion/CLAUDE.md)
 
-- Two layers: cream serif narration outside the phone, real dark UI inside
-- The phone never moves; only the camera zooms
-- Every UI element must match the real app source exactly — no invented cards
-- Coral never appears inside the phone
-- All MyBola copy in Bahasa Malaysia
+- **Read `remotion/docs/03-motion-craft.md`** — the quality bar as concrete rules
+- Never hardcode a hex or font in a scene; ask the design language
+- Whenever a real product's UI is on screen, it must match that product's real
+  source exactly — no invented cards
 - No emoji in compositions (headless Chrome renders blank boxes)
 - **Renders are not bit-reproducible** — the same unchanged code re-rendered gives
   a different md5 (SSIM ~0.9999). Judge changes by looking at frames, not hashes.
+- MyBola-specific: two-layer rule (coral never inside the phone), phone never moves,
+  copy in Bahasa Malaysia
 
-## Roadmap
+## Docs
 
-`remotion/docs/02-polish-roadmap.md` — the six-step plan to close the quality gap to
-the Dispatch reference, cheapest first: texture & depth, evidence bubbles,
-multi-device phone↔desktop, simulated cursor, spring tuning, real Axiforma. Each
-step ships on its own.
+- `remotion/docs/03-motion-craft.md` — how to make it look expensive: timing,
+  type, colour, depth, camera, transitions, and the critique loop
+- `remotion/docs/02-polish-roadmap.md` — MyBola's six-step plan to close the gap to
+  the Dispatch reference: texture & depth, evidence bubbles, multi-device, cursor,
+  spring tuning, real Axiforma
+- `.claude/skills/video/SKILL.md` — the `/video` director workflow

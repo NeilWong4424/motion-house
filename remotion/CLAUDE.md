@@ -1,16 +1,24 @@
-# Product Videos (Remotion)
+# Motion graphics studio (Remotion)
 
-Code-driven product launch videos. Remotion (React + TypeScript), rendered to
-portrait 1080x1920 MP4 at 30fps.
+A code-driven studio for **any kind of motion graphic** — launch films, explainers,
+teasers, stings — each with its own design language and format. Remotion (React +
+TypeScript), rendered to MP4.
 
-This repo holds **many videos across many products** — see Architecture below.
-The first (and so far only) product is **MyBola**, a Malaysian football academy
-management SaaS (AI admin assistant + AI parent inbox). Its current cut is v7
-(~46s), composition id `MyBolaV4`; `MyBolaLaunch` is the older v3.
+**You are the director here, not a code generator.** When someone asks for a video,
+run the staged flow in `.claude/skills/video/SKILL.md`: interview the brief →
+propose a design language → agree a storyboard → build → render and critique your
+own frames. Gate each stage; don't build the wrong film beautifully. That skill is
+also the `/video` command.
 
-Most rules below (two-layer design, code-exact UI, copy) were written for MyBola
-and describe the house style. A second product keeps the structural rules and
-brings its own brand, app UI, and copy language.
+**Read `docs/03-motion-craft.md` before building anything.** It's the quality bar
+(Apple keynote / LoL Worlds explainer) as concrete, checkable rules.
+
+**MyBola is the first product, not the house style.** It's a Malaysian football
+academy management SaaS; its current cut is v7 (~46s, composition id `MyBolaV4`),
+with `MyBolaLaunch` the older v3. Its "warm editorial" look (cream/serif/coral, the
+two-layer phone rule) lives in `products/mybola/design.ts` as **one design language
+among many** — the MyBola-specific rules below describe *that* language, not a law
+for every video. Nothing in `shared/` assumes a look.
 
 ## Commands
 
@@ -25,58 +33,78 @@ brings its own brand, app UI, and copy language.
 
 ## Architecture
 
-The repo is multi-video and multi-product: `shared/` holds the engine and
-brand-neutral primitives, `products/<name>/` holds one product's brand, app theme,
-videos, and audio.
+`shared/` is **style-agnostic** — it never assumes a look. `products/<name>/` owns
+one product's design language, brand, videos and audio. A video is a `VideoDef` in
+a registry; adding one never touches `Root.tsx`.
 
 - `src/Root.tsx` — maps the registry to Remotion `<Composition>`s. Never edit to
   add a video.
-- `src/shared/engine/` — `types.ts` (`VideoDef`, `defineVideo`), `registry.ts`
-  (concatenates each product's `videos` array)
-- `src/shared/narration/primitives.tsx` — serif layer: fonts loader, `FadeIn`,
-  `Drift`, `Camera`, `SERIF`/`SANS`. Brand-neutral: colours/copy passed in.
-- `src/shared/ui/` — `theme.tsx` (app tokens, type scale, `usePjs`),
-  `chat.tsx` (RealBubble, Omnibar, ActionSheet, StatCard), `phone.tsx`
-  (PhoneFrame, AppScreen, StatusBar), `whatsapp.tsx` (WA dark theme — product-neutral)
-- `src/products/mybola/` — `brand.ts` (cream/ink/coral + kicker/wordmark/tagline),
-  `appTheme.ts` (app tokens from the Flutter source), `videos/` (one file per cut,
-  each exporting a `VideoDef`), `index.ts` (the product's video list),
+- `src/shared/engine/` — `types.ts` (`VideoDef`, `defineVideo`, format presets:
+  `PORTRAIT`/`LANDSCAPE`/`SQUARE`/`CINEMA`), `registry.ts` (concatenates each
+  product's `videos` array)
+- `src/shared/design/` — `types.ts` (`DesignLanguage`: palette by role, type specs,
+  motion profile, grain), `fonts.tsx` (loads whatever a language declares)
+- `src/shared/motion/` — the craft layer. `easing.ts` (`EASE`, `SPRING`, `STAGGER`
+  presets), `reveal.tsx` (`Rise`, `Stagger`, `TextReveal`, `MaskWipe`, `CountUp`,
+  `Parallax`), `transitions.tsx` (`FadeIn`, `Drift`, `Camera`, `DipTo`, `Push`)
+- `src/shared/narration/primitives.tsx` — serif layer + legacy font loader
+  (`useFonts`, `SERIF`/`SANS`) kept for the v7 cut
+- `src/shared/ui/` — generic app chrome only: `theme.tsx` (tokens, type scale,
+  `usePjs`), `chat.tsx` (RealBubble, Omnibar, ActionSheet, StatCard), `phone.tsx`
+  (`StatusBar`), `whatsapp.tsx` (WA dark theme — product-neutral)
+- `src/products/mybola/` — `design.ts` (its DesignLanguage), `brand.ts`,
+  `appTheme.ts` (app tokens from the Flutter source), `ui/phone.tsx` (**its**
+  device staging — PhoneFrame/AppScreen), `videos/`, `index.ts`,
   `audio/make_audio.py` (per-video cue tables)
-- `src/legacy/` — v3-era `LaunchVideo.tsx` + `components.tsx` + `theme.ts`, kept
-  renderable (`MyBolaLaunch`) but not built on the shared primitives
-- `public/fonts/` — Playfair Display (serif narration), Plus Jakarta Sans (UI stand-in
-  for Axiforma), Inter
-- `docs/` — roadmap docs (`02-polish-roadmap.md` = the six-step quality plan)
+- `src/legacy/` — v3-era code, kept renderable (`MyBolaLaunch`), not on the
+  shared primitives
+- `public/fonts/` — woff2 the loader reads. Add a family by copying weights from
+  `node_modules/@fontsource/<family>/files/` (installed: Inter, Playfair Display,
+  Plus Jakarta Sans). No network at render time, so fonts must be local.
+- `docs/` — `02-polish-roadmap.md` (MyBola's six-step quality plan),
+  `03-motion-craft.md` (**the quality bar — read before building**)
 
 ### Adding a video (same product)
 
-1. Add `src/products/mybola/videos/<name>.tsx`; build the timeline from
-   `shared/narration` + `shared/ui`; read brand values from `../brand`.
-2. Export a `VideoDef` via `defineVideo({ id, component, durationInFrames })`.
-3. List it in `src/products/mybola/index.ts`. It now appears in Studio and renders
-   via `npm run render <id> out/<id>.mp4`.
+1. Add `src/products/<product>/videos/<name>.tsx`; compose from `shared/motion`;
+   read every colour/font/timing from that product's `design.ts`.
+2. Export a `VideoDef` via `defineVideo({ id, component, durationInFrames })` —
+   spread a format preset for anything non-portrait. Ids: letters/digits/`-` only,
+   **no underscores** (Remotion rejects them).
+3. List it in that product's `index.ts`. It now appears in Studio and renders via
+   `npm run render <id> out/<id>.mp4`.
 4. Add an entry to `VIDEOS` in `audio/make_audio.py` if it needs a score.
 
-### Adding a product
+### Adding a product / a new design language
 
-Create `src/products/<name>/` with its own `brand.ts`, `appTheme.ts`, `videos/`,
-`index.ts`, then import its `videos` into `shared/engine/registry.ts`. Nothing in
-`products/mybola/` changes. Per the code-exact-UI rule, that product recreates its
-OWN app UI under its folder — `shared/ui/` only carries generic chrome
-(phone frame, status bar, bubble mechanics, WhatsApp).
+Create `src/products/<name>/` with its own `design.ts`, `videos/`, `index.ts`, then
+import its `videos` into `shared/engine/registry.ts`. Nothing in other products
+changes. Anything style-specific — device staging, app UI recreations — lives under
+that product, never in `shared/`.
 
-## Design system — two-layer rule (critical)
+**Never hardcode a hex or font family inside a scene.** That's how a repo drifts
+back to a single house style. Scenes ask the design language for `accent`, never
+"the coral one".
+
+## MyBola's design language — the two-layer rule
+
+Applies to MyBola videos (`products/mybola/design.ts`), not to every video.
 
 1. **Narration layer** — cream canvas `#E8E0D3`, ink `#1F1B16`, coral `#C15F3C`,
    Playfair serif. Greeting, punctuation cards (with letterspaced MYBOLA kicker),
-   and the KINI DILANCARKAN close live here. Coral NEVER appears inside the phone.
+   and the KINI DILANCARKAN close live here. Coral NEVER appears inside the phone —
+   the accent belongs to the storyteller, not the product.
 2. **Product layer** — everything inside `PhoneFrame`: the real dark app UI.
    The phone NEVER moves; only the camera zooms (scale on the whole frame).
 
 ## Code-exact UI rule (critical)
 
-Every UI figure inside the phone must match the real Flutter app source at
-`../../project-4/flutter/lib/` (relative to this repo's parent):
+**Whenever a real product's UI appears on screen, it must match that product's real
+source exactly — never an invented approximation.** This is what separates a
+credible product film from a mockup. It applies to any product, not just MyBola.
+
+For MyBola, every UI figure inside the phone must match the real Flutter app source
+at `../../project-4/flutter/lib/` (relative to this repo's parent):
 
 - Tokens: `lib/core/app_theme.dart` — primary #0091FF, secondary #1C1C1E,
   border #1A1A1A, success #30D158, error #FF4245, tertiary 33% white.
@@ -98,9 +126,9 @@ Every UI figure inside the phone must match the real Flutter app source at
 - WhatsApp scene: exact WA dark theme (bg #0B141A, bar #202C33, out #005C4B,
   ticks #53BDEB, send circle #00A884).
 
-## Copy
+## Copy (MyBola)
 
-All on-screen copy is Bahasa Malaysia. AI label is "Pengurus". Demo cast:
+All on-screen copy in **MyBola** videos is Bahasa Malaysia. AI label is "Pengurus". Demo cast:
 coach ("Anda"), player Adam Haris (U-12), parent Puan Aida. Times: admin 9:41 AM,
 parent 9:02 PM — status bar clock must match bubble timestamps.
 
