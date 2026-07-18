@@ -18,8 +18,10 @@ command.
 **No product's look is the house style.** Each product owns its design language
 in `products/<name>/design.ts` and documents its brand rules, copy, and
 code-exact UI targets in its own `products/<name>/NOTES.md`. Nothing in `shared/`
-assumes a look. MyBola (a Malaysian football academy SaaS) is the first product
-in here — its rules live in `products/mybola/NOTES.md`, not in this file.
+assumes a look. **The engine ships with NO products** — it boots empty (an
+`EmptyEngine` placeholder) until a consumer registers a video. A product is added
+outside the engine and registered via `registerVideos()`; the engine never changes
+to accept one.
 
 ## Commands
 
@@ -38,8 +40,8 @@ in here — its rules live in `products/mybola/NOTES.md`, not in this file.
 - Audio align: find the generated track's biggest-energy moment and shift it onto
   the cut's `payoff` frame; mux music + any SFX with ffmpeg `amix` (see Audio
   section below).
-- Per-product convenience scripts (e.g. `render:mybola-v4`, `audio:mybola-v4`)
-  are defined in `package.json` — `npm run` to list them.
+- A product may add its own convenience scripts to `package.json` (e.g.
+  `render:acme-teaser`) — `npm run` lists them. The engine ships none.
 
 ## Architecture
 
@@ -86,9 +88,9 @@ a registry; adding one never touches `Root.tsx`.
 3. List it in that product's `index.ts`. It now appears in Studio and renders via
    `npm run render <id> out/<id>.mp4`.
 4. If it needs a score: declare an `audio` brief on the `VideoDef` (beats in
-   frames + style/hook), run `npm run audio:prompt <id> -- --write`, generate the
-   track from the prompt, and add the video to `audio/make_audio.py` for `--align`
-   + SFX.
+   frames + style/hook), run `node scripts/audio-prompt.mjs <brief> --out
+   PROMPT.md`, generate the track from that prompt, then align its payoff onto the
+   cut's frame (a product-side align/mux step) and mux.
 
 ### Adding a product / a new design language
 
@@ -112,8 +114,8 @@ credible product film from a mockup, and it applies to every product.
 - No emoji in compositions (headless Chrome renders blank boxes) — the `npm run qc`
   gate enforces this.
 - Each product records its exact tokens, component geometry, and copy targets in
-  its own `NOTES.md` (e.g. MyBola's Flutter-source figures live in
-  `products/mybola/NOTES.md`). Read that before recreating its UI.
+  its own `NOTES.md` (e.g. an app's design-source figures live in
+  `products/<name>/NOTES.md`). Read that before recreating its UI.
 
 ## Audio
 
@@ -184,10 +186,9 @@ video — compare frames by eye, and treat SSIM ≥ ~0.9997 as "within renderer 
 
 ## Per-product backlogs
 
-Product polish plans live with their product, not here. MyBola's reference
-analysis, remaining steps, and done criteria are in
-`src/products/mybola/NOTES.md`. Each new product keeps its own notes the same
-way — this file stays product-neutral repo doctrine.
+Product polish plans live with their product, not here — a product's reference
+analysis, remaining steps, and done criteria go in its own
+`src/products/<name>/NOTES.md`. This file stays product-neutral engine doctrine.
 
 ## Money-gated deliverables (budget, not code)
 

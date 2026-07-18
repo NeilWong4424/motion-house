@@ -192,10 +192,9 @@ ${cutTable}
 
 ${alignment}
 
-Alignment is done by \`make_audio.py --align <track>\`: it finds the returned
-track's biggest-energy moment, time-shifts it onto \`payoff_at\` (never
-pitch-shifts), and pads/trims to cover the full cut. Then mux + verify the
-sound-designer's numeric gates.
+Alignment (a product-side step): find the returned track's biggest-energy moment,
+time-shift it onto \`payoff_at\` (never pitch-shift), and pad/trim to cover the full
+cut. Then mux + verify the sound-designer's numeric gates.
 ${brief.sfxNotes ? `\n**SFX stay synthesized** (not generated): ${brief.sfxNotes}` : ""}
 `;
 }
