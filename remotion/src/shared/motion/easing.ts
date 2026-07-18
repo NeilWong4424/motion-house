@@ -9,7 +9,7 @@ import { Easing } from "remotion";
 //      physical world starts and stops instantly.
 //   2. Fast out, slow in. Elements should cover most of their distance early and
 //      ease into rest — that's what makes a move feel "expensive".
-// See docs/03-motion-craft.md for when to reach for which.
+// See craft/motion-craft.md for when to reach for which.
 
 /**
  * Named curves. `linear` exists only for cases that genuinely need constant
@@ -32,8 +32,8 @@ export type EaseName = keyof typeof EASE;
 
 /**
  * Spring presets. Springs beat curves when something should feel physical —
- * arriving, landing, reacting. Values generalize the configs proven in the
- * MyBola v7 cut (damping 13-17, stiffness 120-175).
+ * arriving, landing, reacting. Restrained configs (damping 10-20, stiffness
+ * 90-170): controlled arrivals, no gratuitous wobble.
  */
 export const SPRING = {
   /** Quick and controlled, no visible wobble. UI, chat bubbles, captions. */

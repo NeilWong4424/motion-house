@@ -2,7 +2,18 @@
 
 The engine can render anything. This doc is the difference between output that
 looks like a template and output that looks like it cost money. Read it before
-building a video; check against it before declaring one done.
+building a video; check against it before declaring one done. **This is the
+universal core — the flagship.** Genre chapters in this folder deepen it for a
+specific kind of film; read the one that matches what you're building:
+
+- `kinetic-type.md` — title sequences, big-type films (type as motion)
+- `data-motion.md` — numbers and charts that arrive
+- `broadcast-energy.md` — the high-energy / esports register (rhythm, shapes)
+- `logo-resolve.md` — how a brand mark lands at the close
+- `sound-design.md` — score and mix (the sound-designer agent's bar)
+- `delivery.md` — mastering per platform (safe areas, aspect, captions)
+
+Each is product-neutral doctrine; per-film numbers live in a product's `NOTES.md`.
 
 **The calibration bar:** Apple product launches (restraint, weight, enormous type,
 long holds), League of Legends Worlds format explainers (energy, rhythm, confident

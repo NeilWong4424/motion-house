@@ -10,8 +10,7 @@ import { EASE, type EaseName } from "./easing";
 // much. Hard cuts are underrated: cut on the beat and the edit disappears.
 
 /**
- * Fade in at the head of a scene and out at its tail. The safe default, and what
- * the MyBola cut uses throughout.
+ * Fade in at the head of a scene and out at its tail. The safe default.
  * `d` = frames of fade on each side.
  */
 export const FadeIn: React.FC<{ children: React.ReactNode; d?: number }> = ({ children, d = 8 }) => {
@@ -45,11 +44,13 @@ export const Drift: React.FC<{ children: React.ReactNode; scale?: number; rise?:
 };
 
 /**
- * Slow cinematic camera: push in (or out) with optional drift across the scene.
- * The subject stays still; only the camera moves — that's what keeps a demo
- * feeling filmed rather than animated.
+ * Slow cinematic push: ease in (or out) with optional drift across the scene.
+ * The subject stays still; only the lens moves — that's what keeps a demo
+ * feeling filmed rather than animated. For a shot BREAKDOWN (cutting between
+ * framings within a scene) use `Shot`/`Camera` in shot.tsx; this is the single
+ * unbroken slow push over a whole scene.
  */
-export const Camera: React.FC<{
+export const SlowPush: React.FC<{
   children: React.ReactNode;
   zoomFrom?: number;
   zoomTo?: number;

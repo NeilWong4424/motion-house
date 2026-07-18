@@ -87,6 +87,73 @@ export const TextReveal: React.FC<{
 };
 
 /**
+ * Reveal behind a growing circle (iris). Crisp, no fade. `origin` is the CSS
+ * position the circle grows from. Good for a punchy "here it is" reveal.
+ */
+export const IrisWipe: React.FC<{
+  children: React.ReactNode;
+  delay?: number;
+  duration?: number;
+  origin?: string;
+  ease?: EaseName;
+}> = ({ children, delay = 0, duration = 20, origin = "center", ease = "easeOutQuart" }) => {
+  const frame = useCurrentFrame();
+  const p = interpolate(frame, [delay, delay + duration], [0, 75], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: EASE[ease],
+  });
+  const mask = `radial-gradient(circle at ${origin}, #000 ${p}%, transparent ${p + 6}%)`;
+  return <div style={{ WebkitMaskImage: mask, maskImage: mask }}>{children}</div>;
+};
+
+/**
+ * Reveal via an animated clip-path inset — content unveils from an edge as a
+ * hard rectangular wipe. `from` picks the side the cover retracts toward.
+ */
+export const ClipReveal: React.FC<{
+  children: React.ReactNode;
+  delay?: number;
+  duration?: number;
+  from?: "left" | "right" | "top" | "bottom";
+  ease?: EaseName;
+}> = ({ children, delay = 0, duration = 18, from = "left", ease = "easeOutQuart" }) => {
+  const frame = useCurrentFrame();
+  const p = interpolate(frame, [delay, delay + duration], [100, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: EASE[ease],
+  });
+  const inset = {
+    left: `inset(0 ${p}% 0 0)`,
+    right: `inset(0 0 0 ${p}%)`,
+    top: `inset(0 0 ${p}% 0)`,
+    bottom: `inset(${p}% 0 0 0)`,
+  }[from];
+  return <div style={{ clipPath: inset }}>{children}</div>;
+};
+
+/**
+ * Split reveal — two halves part to show content, or content arrives as two
+ * halves meeting. Here: the content wipes in from the centre outward (a centre
+ * split opening). Reads as deliberate, mechanical — good for a title bar.
+ */
+export const SplitReveal: React.FC<{
+  children: React.ReactNode;
+  delay?: number;
+  duration?: number;
+  ease?: EaseName;
+}> = ({ children, delay = 0, duration = 18, ease = "easeOutQuart" }) => {
+  const frame = useCurrentFrame();
+  const p = interpolate(frame, [delay, delay + duration], [50, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: EASE[ease],
+  });
+  return <div style={{ clipPath: `inset(0 ${p}% 0 ${p}%)` }}>{children}</div>;
+};
+
+/**
  * Wipe content in behind a moving mask — no fade. Reads as crisp and physical;
  * good for type that should feel printed rather than projected.
  */

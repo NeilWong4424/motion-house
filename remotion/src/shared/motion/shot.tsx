@@ -27,12 +27,13 @@ export type Frame = {
   /**
    * 1 = full frame. 1.15 = punched in slightly.
    *
-   * MIND THE SUBJECT'S EDGES. When the subject is a device mockup, zooming past
-   * the point where its body leaves frame stops reading as "an app on a phone"
-   * and becomes a bare UI — you lose the whole two-layer premise. For a 902px
-   * phone in a 1080px frame that limit is 1080/902 = 1.19, so gentle punches
-   * (~1.15) are the useful range. If you need to punch harder than the subject
-   * allows, stage the subject smaller first — don't crop it away.
+   * MIND THE SUBJECT'S EDGES. When the subject is a framed object (a device, a
+   * window), zooming past the point where its body leaves frame stops reading as
+   * "an app on a phone" and becomes a bare UI — you lose the staging premise. The
+   * punch-in ceiling is `frame_size / subject_size`: a subject filling most of
+   * the frame leaves almost no room, so gentle punches are the useful range. If
+   * you need to punch harder than the subject allows, stage the subject smaller
+   * first — don't crop it away.
    */
   scale?: number;
 };

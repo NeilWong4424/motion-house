@@ -264,4 +264,37 @@ export const mybolaV8 = defineVideo({
   id: "MyBolaV8",
   component: LaunchVideoV8,
   durationInFrames: TOTAL_V8,
+  // Sound direction for the shared prompt engine (engine/audio-prompt.ts). This
+  // is MyBola's CALM, warm, editorial register — the felt-piano/strings score of
+  // the design language, NOT a promo. There is no euphoric drop: the film's one
+  // payoff is the quiet TURN ("Dan duit? Semua nampak." at f1313) where the story
+  // opens from the coach's chat to the owner's whole-academy view — the harmony
+  // should LIFT gently there (relative-major colour), not slam. Beat frames are
+  // the real scene table above (AT_* offsets), 2301f @ 30fps.
+  audio: {
+    style:
+      "Warm, unhurried editorial score — felt piano and bowed strings, free-time and human, NOT a promo. Reference feel: an Anthropic/Apple product film — intimate, reassuring, quietly confident. Instrumental. No beat grid, no pulse.",
+    instrumentation:
+      "Felt/soft-hammer upright piano as the lead voice, bowed sustained strings as the bed, a soft upright bass on the floor, and a single glass bell used ONCE as an accent (scarcity — like the coral in the visuals). No drums, no percussion pulse, no synths.",
+    tempoKey:
+      "Free-time, roughly 62 BPM feel but rubato (do NOT lock to a grid — 3.3/6/7s scene gaps are not musical durations). Warm major key (around C / F major); lift to a brighter relative-major voicing at the turn.",
+    hook:
+      "A small, tender 3-note piano motif — the kind you could hum — stated sparsely early and restated an octave up, warmer, at the turn when the film opens to the owner's view. Gentle, never triumphant.",
+    beats: [
+      { frame: 0, role: "intro", label: "Greeting (Selamat pagi, Coach)" },
+      { frame: 90, role: "build", label: "Hook (Satu akademi)" },
+      { frame: 150, role: "build", label: "SceneA (daftar + bil)" },
+      { frame: 546, role: "build", label: "SceneB (sesi + jadual)" },
+      { frame: 927, role: "build", label: "SceneC (WhatsApp kedai)" },
+      { frame: 1313, role: "drop", label: "Turn (Dan duit? Semua nampak) - gentle lift" },
+      { frame: 1379, role: "sustain", label: "Desktop bills (siapa belum bayar)" },
+      { frame: 1805, role: "sustain", label: "Desktop ahli (semua satu tempat)" },
+      { frame: 2171, role: "outro", label: "Close (KINI DILANCARKAN)" },
+    ],
+    stingerFrame: 2183, // the MYBOLA wordmark settles on the close; one soft glass bell
+    exclude:
+      "No vocals, no lyrics, no spoken word. No drums, no kick, no percussion pulse, no sidechain pump. No EDM, no lo-fi, no chillhop. No four-on-the-floor. No triumphant brass or trailer slam. No fade-out ending; resolve softly. Nothing hot or loud — keep generous headroom.",
+    sfxNotes:
+      "UI SFX synthesized separately (make_audio.py compose_sfx), not generated here: soft typing taps before each send, a gentle send pop and a receive pop per bubble, mapped to the atFrame values in SceneA/B/C and the WhatsApp scene. One glass bell aligned to the turn (f1313) and echoed on the close stinger.",
+  },
 });

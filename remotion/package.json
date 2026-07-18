@@ -4,6 +4,7 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "qc": "node scripts/qc.mjs",
+    "audio:prompt": "node scripts/audio-prompt.mjs",
     "render": "remotion render src/index.ts",
     "still": "remotion still src/index.ts",
     "render:mybola-v4": "remotion render src/index.ts MyBolaV4 out/MyBolaV4.mp4",
@@ -13,6 +14,7 @@
     "audio:mybola-parent": "python src/products/mybola/audio/make_audio.py MyBolaParent --out out/audio"
   },
   "dependencies": {
+    "@fontsource/anton": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/playfair-display": "^5.2.8",
     "@fontsource/plus-jakarta-sans": "^5.2.8",
