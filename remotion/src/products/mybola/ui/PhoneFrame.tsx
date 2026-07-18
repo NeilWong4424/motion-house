@@ -14,7 +14,7 @@ import { t } from "./tokens";
 export const SCREEN_W = 560;
 export const SCREEN_H = 1212; // ~ iPhone 19.5:9 aspect at 560 wide
 
-const BEZEL = 18;
+export const BEZEL = 18;
 const RADIUS = 76;
 
 export const PhoneFrame: React.FC<{

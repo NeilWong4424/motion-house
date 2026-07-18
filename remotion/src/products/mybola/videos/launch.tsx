@@ -8,6 +8,8 @@ import { DipTo } from "../../../shared/motion/transitions";
 import { Resolve } from "../../../shared/motion/logo";
 import { mybola, MYBOLA } from "../design";
 import { displayFamily, t, ct, rm } from "../ui/tokens";
+import { HookBubble } from "../ui/HookOptions";
+import { CapsOrbit } from "../ui/Capabilities";
 import { PhoneFrame } from "../ui/PhoneFrame";
 import { ChatBubble } from "../ui/ChatBubble";
 import { ChatOmnibar } from "../ui/ChatOmnibar";
@@ -28,19 +30,21 @@ import { Dashboard } from "../ui/Dashboard";
 // per beat, calm easing, holds after landings. The phone is mounted once inside
 // each phone-scene at a fixed size (never scales itself).
 
+// v2 scene table. The Pengurus Akademi chapter (hook + capability montage +
+// summary + inputs) is now the front half; WhatsApp onward shift later.
 const S = {
-  cold: { from: 0, dur: 120 }, //  0–4s   cold open
-  chat: { from: 120, dur: 270 }, //  4–13s  owner ↔ Pengurus Akademi
-  input: { from: 390, dur: 150 }, // 13–18s  the 5 input kinds
-  roster: { from: 540, dur: 180 }, // 18–24s import PDF roster (bulk register)
-  wa: { from: 720, dur: 450 }, // 24–39s  WhatsApp core + Auto-balas -> Anda
-  lang: { from: 1170, dur: 150 }, // 39–44s balas dalam bahasa pelanggan
-  sesi: { from: 1320, dur: 150 }, // 44–49s sessions & attendance
-  dash: { from: 1470, dur: 120 }, // 49–53s dashboard payoff
-  end: { from: 1590, dur: 150 }, // 53–58s end card + CTA
+  hook: { from: 0, dur: 150 }, //   0–5s   phone bursts to life -> headline
+  chat: { from: 150, dur: 570 }, //  5–24s  Pengurus Akademi full capability montage
+  caps: { from: 720, dur: 180 }, // 24–30s  capability summary (variant slotted in)
+  input: { from: 900, dur: 150 }, // 30–35s the 5 input kinds
+  wa: { from: 1050, dur: 450 }, // 35–50s  WhatsApp core + Auto-balas -> Anda
+  lang: { from: 1500, dur: 150 }, // 50–55s balas dalam bahasa pelanggan
+  sesi: { from: 1650, dur: 150 }, // 55–60s sessions & attendance
+  dash: { from: 1800, dur: 120 }, // 60–64s dashboard payoff
+  end: { from: 1920, dur: 150 }, // 64–69s end card + CTA
 } as const;
 
-const TOTAL = S.end.from + S.end.dur; // 1740 frames = 58s
+const TOTAL = S.end.from + S.end.dur; // 2070 frames = 69s
 
 // A tenth-of-a-second cadence of processing dots for the omnibar.
 const dotsFor = (localFrame: number): string => ".".repeat((Math.floor(localFrame / 8) % 4));
@@ -60,86 +64,156 @@ const Stage: React.FC<{ children: React.ReactNode; enterAt?: number }> = ({ chil
 };
 
 // -----------------------------------------------------------------------------
-// Scene 1 — cold open
+// Scene 1 — hook (built in ui/Hook.tsx)
 // -----------------------------------------------------------------------------
-const ColdOpen: React.FC = () => (
-  <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", padding: "0 90px" }}>
-    <TextReveal
-      text={"Uruskan akademi anda —\ndari poket anda."}
-      by="line"
-      delay={6}
-      step={6}
-      distance={30}
-      preset="weighty"
-      style={{ fontFamily: displayFamily, fontSize: 84, color: MYBOLA.white, lineHeight: 0.98, textAlign: "center", letterSpacing: 0.5 }}
-    />
-  </AbsoluteFill>
-);
 
 // -----------------------------------------------------------------------------
-// Scene 2 — owner ↔ Pengurus Akademi (admin AI)
+// Scene 2 — Pengurus Akademi: full capability montage
 // -----------------------------------------------------------------------------
-const ChatScene: React.FC = () => {
-  const f = useCurrentFrame();
-  // Timeline within the scene: type q1 -> processing -> reply -> q2 -> bill update.
-  const typed1 = f < 40 ? "siapa belum bayar?" : "";
-  const processing = f >= 40 && f < 78;
-  const q1Sent = f >= 40;
-  const reply1 = f >= 90;
-  const q2 = f >= 165;
-  const reply2 = f >= 205;
+// A scripted transcript that plays through the AI's real capabilities. Each STEP
+// is one exchange: the owner types a line (shown in the omnibar), it sends,
+// "Pengurus sedang memproses…", then the AI reply lands. Some steps attach a media
+// bubble (a snapped receipt, a dropped PDF roster). The transcript sticks to the
+// bottom and scrolls up as it fills — like the real chat. Every action maps to a
+// real tool in mybola_chat_agent/agent.py; copy is rule-faithful, RM 2-dp.
 
-  const bubbles: React.ReactNode[] = [];
-  if (q1Sent) bubbles.push(<Rise key="q1" delay={0} distance={16}><ChatBubble isMine text="siapa belum bayar?" sender="Anda" time="9:12 AM" /></Rise>);
-  if (reply1)
-    bubbles.push(
-      <Rise key="r1" delay={0} distance={16}>
-        <ChatBubble isMine={false} sender="Pengurus Akademi" time="9:12 AM" text={`3 ahli belum bayar, jumlah ${rm(320)}:\n• Ahmad Faizal — ${rm(150)}\n• Nur Aisyah — ${rm(120)}\n• Danish Haiqal — ${rm(50)}\nMahu saya hantar peringatan?`} />
-      </Rise>,
-    );
-  if (q2) bubbles.push(<Rise key="q2" delay={0} distance={16}><ChatBubble isMine text="kemaskini bil Ahmad, tandakan dibayar" sender="Anda" time="9:13 AM" /></Rise>);
-  if (reply2)
-    bubbles.push(
-      <Rise key="r2" delay={0} distance={16}>
-        <ChatBubble isMine={false} sender="Pengurus Akademi" time="9:13 AM" text={`Siap. Bil Ahmad Faizal (${rm(150)}) kini "Dibayar". Mahu saya hantar resit kepada beliau?`} />
-      </Rise>,
-    );
-
-  return (
-    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: MYBOLA.black, paddingTop: 44 }}>
-      {/* transcript */}
-      <div style={{ flex: 1, padding: 12, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 10, overflow: "hidden" }}>{bubbles}</div>
-      {/* omnibar */}
-      <div style={{ padding: 12, paddingBottom: 16 }}>
-        <ChatOmnibar value={typed1} processing={processing} dots={dotsFor(f)} />
-      </div>
-    </div>
-  );
+type Step = {
+  q: string; // owner's typed line
+  a: string; // Pengurus Akademi reply
+  time: string;
+  media?: "receipt" | "roster"; // optional bubble attached to the owner's message
 };
 
-// -----------------------------------------------------------------------------
-// Scene 4 — import roster from a PDF (bulk register)
-// -----------------------------------------------------------------------------
-const RosterScene: React.FC = () => {
+const STEPS: Step[] = [
+  {
+    q: "siapa belum bayar?",
+    a: `3 ahli belum bayar, jumlah ${rm(320)}:\n• Ahmad Faizal — ${rm(150)}\n• Nur Aisyah — ${rm(120)}\n• Danish Haiqal — ${rm(50)}\nMahu saya hantar peringatan?`,
+    time: "9:12 AM",
+  },
+  {
+    q: "ya, hantar peringatan kepada mereka",
+    a: `Peringatan dihantar kepada 3 ahli melalui notifikasi. Mahu saya keluarkan yuran bulan ini juga?`,
+    time: "9:12 AM",
+  },
+  {
+    q: "keluarkan yuran bulan ni untuk skuad bawah-12",
+    a: `Sedia untuk keluarkan yuran ${rm(150)} kepada 15 ahli Skuad Bawah-12 — jumlah ${rm(2250)}. Sahkan?`,
+    time: "9:13 AM",
+  },
+  {
+    q: "snap resit ni, isikan bil",
+    a: `Saya baca resit — Kedai Sukan Maju, ${rm(240)} untuk 12 bola. Direkod sebagai perbelanjaan. Tak perlu taip apa-apa.`,
+    time: "9:15 AM",
+    media: "receipt",
+  },
+  {
+    q: "jadualkan latihan Sabtu 9 pagi di Padang Melawati",
+    a: `Sesi dicipta: Latihan Skuad Bawah-12, Sabtu 9:00 pagi, Padang Melawati. Mahu saya jemput ahli?`,
+    time: "9:16 AM",
+  },
+  {
+    q: "daftar semua pelatih dalam senarai ni",
+    a: `Saya baca 6 pelatih dari PDF ini. Semua telah didaftarkan sebagai ahli baru. Mahu saya jadualkan sesi pertama mereka?`,
+    time: "9:18 AM",
+    media: "roster",
+  },
+];
+
+// A snapped-receipt tile (owner sends a photo of a paper receipt).
+const ReceiptPhoto: React.FC = () => (
+  <div style={{ width: 190, borderRadius: 10, overflow: "hidden", background: MYBOLA.paperWarm }}>
+    <div style={{ padding: "14px 14px 18px", color: MYBOLA.paperInk, fontFamily: "monospace" }}>
+      <div style={{ textAlign: "center", fontWeight: 700, fontSize: 12, letterSpacing: 1 }}>KEDAI SUKAN MAJU</div>
+      <div style={{ textAlign: "center", fontSize: 8, color: MYBOLA.paperDim, marginTop: 2 }}>RESIT RASMI</div>
+      <div style={{ borderTop: `1px dashed ${MYBOLA.paperRule}`, margin: "10px 0" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9 }}><span>Bola latihan x12</span><span>240.00</span></div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, marginTop: 4 }}><span>Kon x6</span><span>—</span></div>
+      <div style={{ borderTop: `1px dashed ${MYBOLA.paperRule}`, margin: "10px 0" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 700 }}><span>JUMLAH</span><span>RM240.00</span></div>
+    </div>
+  </div>
+);
+
+// A completed exchange (owner bubble [+ media] then AI reply), rendered whole.
+const DoneStep: React.FC<{ step: Step }> = ({ step }) => (
+  <>
+    <ChatBubble isMine sender="Anda" time={step.time} text={step.q} maxWidth={280} />
+    {step.media === "receipt" && (
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <ChatBubble isMine sender="Anda" time={step.time} text="" bare>
+          <ReceiptPhoto />
+        </ChatBubble>
+      </div>
+    )}
+    {step.media === "roster" && (
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <ChatBubble isMine sender="Anda" time={step.time} text="" bare>
+          <PdfRoster />
+        </ChatBubble>
+      </div>
+    )}
+    <ChatBubble isMine={false} sender="Pengurus Akademi" time={step.time} text={step.a} maxWidth={288} />
+  </>
+);
+
+// Per-step timing (frames): type -> send/process -> reply -> hold, then next.
+const STEP_TYPE = 22; //  owner line typing in the omnibar
+const STEP_PROC = 24; //  processing dots
+const STEP_REPLY = 40; // reply visible + read
+const STEP_HOLD = 8; //   small hold before the next step
+const STEP_DUR = STEP_TYPE + STEP_PROC + STEP_REPLY + STEP_HOLD; // 94f
+
+const ChatScene: React.FC = () => {
   const f = useCurrentFrame();
-  const confirm = f >= 70;
-  const done = f >= 120;
+  const idx = Math.min(STEPS.length - 1, Math.floor(f / STEP_DUR));
+  const local = f - idx * STEP_DUR;
+
+  // Phase within the current step.
+  const typing = local < STEP_TYPE;
+  const processing = local >= STEP_TYPE && local < STEP_TYPE + STEP_PROC;
+  const replied = local >= STEP_TYPE + STEP_PROC;
+  const cur = STEPS[idx];
+
+  // Completed steps render fully; the current step reveals in phases.
+  const completed = STEPS.slice(0, idx);
+
+  // The omnibar shows the typing line during the type phase, else empty/processing.
+  const omniValue = typing ? cur.q : "";
+
   return (
     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: MYBOLA.black, paddingTop: 44 }}>
       <div style={{ flex: 1, padding: 12, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 10, overflow: "hidden" }}>
-        <Rise delay={0} distance={16}>
-          <ChatBubble isMine sender="Anda" time="9:20 AM" text="" bare>
-            <PdfRoster />
-          </ChatBubble>
-        </Rise>
-        {confirm && (
-          <Rise delay={0} distance={16}>
-            <ChatBubble isMine={false} sender="Pengurus Akademi" time="9:20 AM" text={done ? "Selesai — 6 pelatih didaftarkan dari senarai. Mahu saya jadualkan sesi pertama mereka?" : "Saya baca 6 pelatih dari senarai ini. Daftar kesemuanya sekarang?"} />
+        {completed.map((s, i) => (
+          <DoneStep key={i} step={s} />
+        ))}
+        {/* current step: owner bubble appears once sent; reply appears once replied. */}
+        {!typing && (
+          <>
+            <ChatBubble isMine sender="Anda" time={cur.time} text={cur.q} maxWidth={280} />
+            {cur.media === "receipt" && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <ChatBubble isMine sender="Anda" time={cur.time} text="" bare>
+                  <ReceiptPhoto />
+                </ChatBubble>
+              </div>
+            )}
+            {cur.media === "roster" && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <ChatBubble isMine sender="Anda" time={cur.time} text="" bare>
+                  <PdfRoster />
+                </ChatBubble>
+              </div>
+            )}
+          </>
+        )}
+        {replied && (
+          <Rise delay={0} distance={14}>
+            <ChatBubble isMine={false} sender="Pengurus Akademi" time={cur.time} text={cur.a} maxWidth={288} />
           </Rise>
         )}
       </div>
       <div style={{ padding: 12, paddingBottom: 16 }}>
-        <ChatOmnibar value={confirm && !done ? "ya, daftar semua" : ""} />
+        <ChatOmnibar value={omniValue} processing={processing} dots={dotsFor(local)} />
       </div>
     </div>
   );
@@ -276,22 +350,26 @@ const LaunchFilm: React.FC = () => {
   useDesignFonts(mybola);
   return (
     <AbsoluteFill style={{ background: MYBOLA.black }}>
-      <Sequence from={S.cold.from} durationInFrames={S.cold.dur}><ColdOpen /></Sequence>
+      {/* Scene 1 — hook: giant chat bubble (client's pick). */}
+      <Sequence from={S.hook.from} durationInFrames={S.hook.dur}><HookBubble /></Sequence>
 
+      {/* Scene 2 — Pengurus Akademi full capability montage. */}
       <Sequence from={S.chat.from} durationInFrames={S.chat.dur}>
         <Stage><PhoneFrame time="9:12"><ChatScene /></PhoneFrame></Stage>
       </Sequence>
 
+      {/* Scene 3 — capability summary (orbit variant, client's pick). */}
+      <Sequence from={S.caps.from} durationInFrames={S.caps.dur}>
+        <CapsOrbit />
+      </Sequence>
+
+      {/* Scene 4 — send it anything. */}
       <Sequence from={S.input.from} durationInFrames={S.input.dur}>
         <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 60 }}>
           <TextReveal text="Hantar apa sahaja." by="word" delay={2} step={2}
             style={{ fontFamily: displayFamily, fontSize: 56, color: MYBOLA.white, letterSpacing: 0.5, justifyContent: "center" }} />
           <InputTypes startDelay={12} />
         </AbsoluteFill>
-      </Sequence>
-
-      <Sequence from={S.roster.from} durationInFrames={S.roster.dur}>
-        <Stage><PhoneFrame time="9:20"><RosterScene /></PhoneFrame></Stage>
       </Sequence>
 
       {/* Chapter break into the WhatsApp core. */}
@@ -340,10 +418,10 @@ export const launch = defineVideo({
     tempoKey: "72 BPM, A major",
     hook: "A simple, memorable 4-note rising piano motif that returns at the payoff and resolves on the end card.",
     beats: [
-      { frame: S.cold.from, role: "intro", label: "Cold open", sound: "One held felt-piano chord, air, space. The promise stated." },
-      { frame: S.chat.from, role: "build", label: "Admin AI", sound: "Motif enters on piano, pad swells softly under it." },
+      { frame: S.hook.from, role: "intro", label: "Hook", sound: "Motif hits with the montage — the product bursts to life; resolves under the headline." },
+      { frame: S.chat.from, role: "build", label: "Pengurus Akademi", sound: "Piano motif carries; pad swells; a light mallet accent on each action landing." },
+      { frame: S.caps.from, role: "build", label: "Capability summary", sound: "Add a bright arpeggio as the capabilities stagger in." },
       { frame: S.input.from, role: "build", label: "Inputs" },
-      { frame: S.roster.from, role: "build", label: "PDF roster", sound: "Add a light mallet accent as rows register." },
       { frame: S.wa.from, role: "riser", label: "WhatsApp core", sound: "Gentle rise; warmth grows as the customer is helped end-to-end." },
       { frame: S.dash.from, role: "payoff", label: "Dashboard payoff", sound: "The motif returns full, a soft kick + brushed pulse arrive, hopeful lift." },
       { frame: S.end.from, role: "outro", label: "End card", sound: "Resolve the motif on a warm major chord; let it ring out." },

@@ -37,6 +37,12 @@ export const MYBOLA = {
   waOutgoing: "#005C4B", // WA outgoing bubble (right)
   waGreen: "#25D366", // WhatsApp brand green (glyph/label)
   waTick: "#53BDEB", // WA read-receipt blue tick
+  // Paper (a physical receipt / PDF export — not MyBola-branded surfaces).
+  paper: "#F5F3EE",
+  paperWarm: "#EDE7DA",
+  paperInk: "#2A2A2A",
+  paperRule: "#B8AF9C",
+  paperDim: "#777777",
 } as const;
 
 // =============================================================================
