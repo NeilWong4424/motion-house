@@ -1,14 +1,17 @@
-// Emit a music-generation prompt for a composition id.
+// Emit a music-generation prompt from a video's audio brief.
 //
-//   npm run audio:prompt <CompositionId> [-- --write]
+//   node scripts/audio-prompt.mjs <brief-module.ts>            # print to stdout
+//   node scripts/audio-prompt.mjs <brief-module.ts> --out p.md # write to a file
+//   node scripts/audio-prompt.mjs <brief.json>                 # JSON brief input
 //
-// Reads the video's declarative `audio` brief from the registry and runs the
-// shared prompt engine (src/shared/engine/audio-prompt.ts). Prints the prompt to
-// stdout; with --write, saves it to that product's audio/PROMPT.md.
+// The engine is a pure library: this CLI does NOT know about products or a
+// registry. You point it at a source of a VideoDef (or a bare AudioBrief +
+// duration) and it runs the shared prompt engine (src/shared/engine/audio-prompt.ts).
 //
-// We do NOT synthesize audio locally. This prompt is fed to a 3rd-party AI music
-// generator (ElevenLabs / DaVinci / Suno / Udio); the returned track is aligned
-// onto the cut by the product's make_audio.py --align.
+// A .ts/.tsx module must default-export, or export `video`/`videoDef`, a VideoDef;
+// a .json file is read as either a full VideoDef or { durationInFrames, fps, id,
+// audio } shape. The prompt is fed to a 3rd-party AI music generator; the returned
+// track is aligned separately (see the engine's ALIGNMENT PLAN output).
 //
 // TS is bundled on the fly with esbuild (already a Remotion dep) so there's no
 // build step and the TS engine stays the single source of truth.
@@ -16,92 +19,113 @@ import { build } from "esbuild";
 import {
   mkdtempSync,
   writeFileSync,
-  mkdirSync,
   rmSync,
-  readdirSync,
   readFileSync,
-  statSync,
   existsSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve, extname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
-const args = process.argv.slice(2);
-const write = args.includes("--write");
-const id = args.find((a) => !a.startsWith("--"));
+const ENGINE = join(ROOT, "src/shared/engine/audio-prompt.ts");
 
-if (!id) {
-  console.error("usage: npm run audio:prompt <CompositionId> [-- --write]");
+const args = process.argv.slice(2);
+const outIdx = args.indexOf("--out");
+const outPath = outIdx >= 0 ? args[outIdx + 1] : null;
+// the positional source arg: not a flag, and not the value consumed by --out
+const src = args.find((a, i) => !a.startsWith("--") && i !== (outIdx >= 0 ? outIdx + 1 : -1));
+
+if (!src) {
+  console.error(
+    "usage: node scripts/audio-prompt.mjs <brief.ts|brief.json> [--out PROMPT.md]",
+  );
   process.exit(2);
 }
+const srcPath = resolve(src);
+if (!existsSync(srcPath)) {
+  console.error(`no such file: ${srcPath}`);
+  process.exit(1);
+}
 
-// Entry that pulls the registry + engine and resolves the requested video.
-// Import specifiers are relative to resolveDir (ROOT) — not file:// URLs, which
-// esbuild won't resolve when the path contains spaces.
-const entry = `
-import { allVideos } from "./src/shared/engine/registry.ts";
-import { buildPrompt } from "./src/shared/engine/audio-prompt.ts";
-const id = ${JSON.stringify(id)};
-const v = allVideos.find((x) => x.id === id);
-if (!v) { console.error("no composition with id " + id + "; known: " + allVideos.map(x=>x.id).join(", ")); process.exit(1); }
-if (!v.audio) { console.error("composition " + id + " has no audio brief (silent/SFX-only cut)"); process.exit(1); }
-export const prompt = buildPrompt(v);
+const prompt = await run(srcPath);
+if (outPath) {
+  writeFileSync(resolve(outPath), prompt);
+  console.error(`wrote ${resolve(outPath)}`);
+} else {
+  process.stdout.write(prompt);
+}
+
+// ---------------------------------------------------------------------------
+async function run(file) {
+  if (extname(file) === ".json") {
+    const video = normalizeJson(JSON.parse(readFileSync(file, "utf8")));
+    return await bundleAndBuild(inlineEntry(video));
+  }
+  // A TS/TSX module exporting a VideoDef (default, or `video`/`videoDef`).
+  return await bundleAndBuild(moduleEntry(file));
+}
+
+// A VideoDef needs a React component; the engine never touches it, so a JSON
+// brief supplies a stub so the type is satisfied at runtime.
+function normalizeJson(o) {
+  const v = o.audio ? o : { audio: o.brief ?? o }; // allow bare brief or {audio}
+  return {
+    id: o.id ?? "Untitled",
+    durationInFrames: o.durationInFrames ?? o.frames ?? mustHave(o, "durationInFrames"),
+    fps: o.fps ?? 30,
+    audio: v.audio,
+  };
+}
+function mustHave(o, k) {
+  console.error(`JSON brief is missing "${k}"`);
+  process.exit(1);
+}
+
+function inlineEntry(video) {
+  return `
+import { buildPrompt } from ${JSON.stringify(rel(ENGINE))};
+const video = ${JSON.stringify(video)};
+export const prompt = buildPrompt(video);
 `;
-
-const tmp = mkdtempSync(join(tmpdir(), "audio-prompt-"));
-const outfile = join(tmp, "bundle.mjs");
-try {
-  await build({
-    stdin: { contents: entry, resolveDir: ROOT, loader: "ts" },
-    bundle: true,
-    format: "esm",
-    platform: "node",
-    outfile,
-    // React/Remotion get imported transitively by the video components; we only
-    // read data, so stub the heavy render-time deps to keep the bundle cheap.
-    jsx: "automatic",
-    logLevel: "silent",
-  });
-  const mod = await import(pathToFileURL(outfile).href);
-  const prompt = mod.prompt;
-
-  if (write) {
-    // Product dir is derived from the id's product folder convention:
-    // src/products/<slug>/audio/PROMPT.md. We locate it by scanning products.
-    const dir = findProductAudioDir(id);
-    mkdirSync(dir, { recursive: true });
-    const dest = join(dir, "PROMPT.md");
-    writeFileSync(dest, prompt);
-    console.error(`wrote ${dest}`);
-  } else {
-    process.stdout.write(prompt);
-  }
-} finally {
-  rmSync(tmp, { recursive: true, force: true });
 }
 
-// Find which product owns this composition id, returning its audio/ dir.
-function findProductAudioDir(compId) {
-  const productsDir = join(ROOT, "src/products");
-  for (const p of readdirSync(productsDir)) {
-    const dir = join(productsDir, p);
-    if (!statSync(dir).isDirectory()) continue;
-    // cheap check: does any file under this product declare the id?
-    if (grepDir(dir, compId)) return join(dir, "audio");
-  }
-  throw new Error(`could not locate product owning composition ${compId}`);
+function moduleEntry(file) {
+  return `
+import { buildPrompt } from ${JSON.stringify(rel(ENGINE))};
+import * as mod from ${JSON.stringify(rel(file))};
+const video = mod.default ?? mod.video ?? mod.videoDef;
+if (!video) { console.error("module must export a VideoDef (default, or 'video'/'videoDef')"); process.exit(1); }
+export const prompt = buildPrompt(video);
+`;
 }
 
-function grepDir(dir, needle) {
-  for (const e of readdirSync(dir)) {
-    const full = join(dir, e);
-    if (statSync(full).isDirectory()) {
-      if (grepDir(full, needle)) return true;
-    } else if (/\.(ts|tsx)$/.test(e)) {
-      if (readFileSync(full, "utf8").includes(`"${needle}"`)) return true;
-    }
+// esbuild import specifiers are resolved against ROOT; use POSIX-relative paths
+// (not file:// URLs — esbuild won't resolve those when the path contains spaces).
+function rel(abs) {
+  const r = abs.startsWith(ROOT) ? "./" + abs.slice(ROOT.length + 1) : abs;
+  return r.split("\\").join("/");
+}
+
+async function bundleAndBuild(entry) {
+  const tmp = mkdtempSync(join(tmpdir(), "audio-prompt-"));
+  const outfile = join(tmp, "bundle.mjs");
+  try {
+    await build({
+      stdin: { contents: entry, resolveDir: ROOT, loader: "ts" },
+      bundle: true,
+      format: "esm",
+      platform: "node",
+      outfile,
+      jsx: "automatic",
+      logLevel: "silent",
+      // The engine is pure; a VideoDef's component may import React/Remotion — mark
+      // them external so we don't drag the renderer into a data-only bundle.
+      external: ["react", "react/jsx-runtime", "remotion", "@remotion/*"],
+    });
+    const mod = await import(pathToFileURL(outfile).href);
+    return mod.prompt;
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
   }
-  return false;
 }

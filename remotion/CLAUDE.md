@@ -31,12 +31,13 @@ in here — its rules live in `products/mybola/NOTES.md`, not in this file.
 - `npm run still <CompositionId> out/frame.png -- --frame=N` — single frame check
   (note the `--` before `--frame`, so npm passes the flag through)
 - `npx remotion compositions src/index.ts` — list every registered video
-- `npm run audio:prompt <CompositionId>` — emit the music-generation prompt for a
-  video's `audio` brief (add `-- --write` to save to the product's PROMPT.md).
-  Feed the prompt to a 3rd-party AI generator; see the Audio section below.
-- Audio align + SFX: `python products/<name>/audio/make_audio.py <Id> --align
-  <generated-track> --out out/audio` → aligned `-music.wav` + synth `-sfx.wav`;
-  mix with ffmpeg `amix` (see Audio section below)
+- `node scripts/audio-prompt.mjs <brief.ts|brief.json> [--out PROMPT.md]` — emit
+  the music-generation prompt for a video's `audio` brief (also `npm run
+  audio:prompt`). The engine is a pure, genre-agnostic library. Feed the prompt to
+  a 3rd-party AI generator; see the Audio section below.
+- Audio align: find the generated track's biggest-energy moment and shift it onto
+  the cut's `payoff` frame; mux music + any SFX with ffmpeg `amix` (see Audio
+  section below).
 - Per-product convenience scripts (e.g. `render:mybola-v4`, `audio:mybola-v4`)
   are defined in `package.json` — `npm run` to list them.
 
@@ -59,13 +60,13 @@ a registry; adding one never touches `Root.tsx`.
   `Parallax`), `transitions.tsx` (`FadeIn`, `Drift`, `Camera`, `DipTo`, `Push`)
 - `src/shared/narration/primitives.tsx` — serif layer + legacy font loader
   (`useFonts`, `SERIF`/`SANS`)
-- `src/shared/ui/` — generic app chrome only: `theme.tsx` (tokens, type scale,
-  `usePjs`), `chat.tsx` (RealBubble, Omnibar, ActionSheet, StatCard), `phone.tsx`
-  (`StatusBar`), `whatsapp.tsx` (WA dark theme — product-neutral)
-- `src/products/mybola/` — `design.ts` (its DesignLanguage), `brand.ts`,
-  `appTheme.ts` (app tokens from the Flutter source), `ui/phone.tsx` (**its**
-  device staging — PhoneFrame/AppScreen), `videos/`, `index.ts`,
-  `audio/make_audio.py` (per-video cue tables)
+- **App-UI chrome (chat apps, device frames, third-party UIs) is NOT in the
+  engine.** It is a product's own identity — a white-label engine ships primitives
+  (motion, design language, prompt), not a pre-built app look. A product provides
+  its own `ui/` under `src/products/<name>/`.
+- `src/products/<name>/` (product-owned, not part of the engine) — a `design.ts`
+  (its `DesignLanguage`), any brand tokens, its own `ui/` staging, `videos/`,
+  `index.ts`, and its audio brief(s) + alignment. Nothing here lives in `shared/`.
 - `public/fonts/` — woff2 the loader reads. Add a family by copying weights from
   `node_modules/@fontsource/<family>/files/` (installed: Inter, Playfair Display,
   Plus Jakarta Sans). No network at render time, so fonts must be local.
@@ -120,19 +121,22 @@ credible product film from a mockup, and it applies to every product.
 not synthesized locally** — synthesis has a ceiling we hit. The engine's job is the
 two ends around the generator:
 
-1. **The prompt.** A video declares an optional `audio` brief in its `VideoDef`
+1. **The prompt.** A video declares an optional `audio` brief on its `VideoDef`
    (`shared/engine/types.ts` — `AudioBrief`: style, instrumentation, tempo/key,
-   hook, and the cut's `beats` in frames with roles: intro/build/riser/drop/
-   sustain/outro). The shared prompt engine (`shared/engine/audio-prompt.ts`) turns
-   that + the real frame timings into a tool-agnostic music-generation prompt with
-   section proportions and an alignment plan:
-   `npm run audio:prompt <CompositionId>` (add `-- --write` to save it to the
-   product's `audio/PROMPT.md`). **This is style-agnostic and works for any
-   video** — declare the brief, run the command, feed the prompt to the generator.
-2. **Alignment + SFX.** The user generates a track from the prompt; the product's
-   `make_audio.py --align <track>` finds its drop and time-shifts it onto the cut's
-   `drop` frame (never pitch-shifts), padding/trimming to cover the full cut. SFX
-   stay synthesized (`score.py compose_sfx`) and are muxed alongside.
+   hook, and the cut's `beats` in frames with roles: intro/build/riser/payoff/
+   sustain/outro, plus optional per-beat `sound` text). **The engine is
+   genre-agnostic — it bakes in NO register.** What each beat sounds like comes
+   from the brief (`beat.sound` > `brief.roleText[role]` > a bare fallback), so
+   any genre works with zero engine edits. The shared prompt engine
+   (`shared/engine/audio-prompt.ts`) turns the brief + real frame timings into a
+   tool-agnostic prompt (paste block kept under 4000 chars) + an alignment plan:
+   `node scripts/audio-prompt.mjs <brief.ts|brief.json> [--out PROMPT.md]` (also
+   `npm run audio:prompt`). The engine is a **pure library** — it knows nothing
+   about products or a registry; you pass it a `VideoDef` from wherever.
+2. **Alignment + SFX.** The user generates a track from the prompt; an alignment
+   step finds its biggest-energy moment and time-shifts it onto the cut's `payoff`
+   frame (never pitch-shifts), padding/trimming to cover the full cut. Any SFX are
+   synthesized and muxed alongside.
 
 The mux mechanics below are universal; a product's cue tables and measured mix
 targets live in its `NOTES.md`. A video with no `audio` brief simply has no

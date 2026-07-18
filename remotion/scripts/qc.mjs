@@ -2,9 +2,9 @@
 // Run: npm run qc   (exit 1 on any ERROR; warnings don't block)
 //
 // ERROR   risky Unicode glyphs (emoji, dingbats, arrows) in composition code —
-//         headless Chrome renders them as tofu boxes. Use an SVG instead
-//         (see WACheck in shared/ui/whatsapp.tsx). Comments are ignored.
-// WARNING hardcoded hex colours inside a scene file (products/*/videos/) —
+//         headless Chrome renders them as tofu boxes. Use an inline SVG instead.
+//         Comments are ignored.
+// WARNING hardcoded hex colours inside a scene file (a product's videos/) —
 //         scenes should read colour from their design language / brand / theme.
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";

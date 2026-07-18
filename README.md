@@ -1,146 +1,130 @@
-# Motion graphics studio
+# Motion engine — a white-label motion-graphics studio
 
-Text to motion graphic. You describe the video; **Claude Code is the studio** —
-it researches the subject, forms its own creative direction, builds the film,
-puts it through QC and a cold creative-director review, then delivers a finished
-cut with a director's statement. You give notes on delivered work, like a client
-with an agency — not approvals on palettes and beat sheets.
+A **product-neutral engine** for building commercial-grade motion graphics as code
+(Remotion). It ships with **no brand, no look, and no videos** — you add a *product*
+(one design language + its videos) on top, and the engine turns it into rendered
+film. Any style, any format: launch films, explainers, teasers, stings.
 
-Built as code (Remotion), so every frame is version-controlled, diffable, and
-re-renderable. Any style, any format — launch films, explainers, teasers, stings.
-Commercial-grade output is the bar: Apple keynote, LoL Worlds explainer.
+Because it's code, every frame is version-controlled, diffable, and re-renderable.
+The quality bar is commercial: Apple keynote, LoL Worlds explainer.
 
-MyBola (a Malaysian football academy SaaS) is the first product in here — its
-"warm editorial" look is **one design language among many**, not the house style.
+> **Fresh bake.** Clone it and it boots empty — the studio opens on a single
+> `EmptyEngine` placeholder until you register a video. Nothing about any past
+> client is baked in.
 
-## Make a video
+## What's in the box
 
-```
-claude
-> /video
-```
-
-Give it the brief and let it work. It asks only for facts it can't research
-(product claims, licensing) — everything creative is its call, defended in the
-director's statement at delivery. Plain chat works too — "make me a 30s teaser
-for X" runs the same flow. Give notes on the delivered cut; revisions are part
-of the job.
-
-## Contents
-
-- `remotion/` — the video project (source, fonts, docs, CLAUDE.md)
-- `renders/` — delivered cuts (v5, v6, v7; v7 is current)
-
-## Setup (once)
-
-1. Install Node.js 20+ (nodejs.org) and ffmpeg (`winget install ffmpeg`)
-2. Install Claude Code: `npm install -g @anthropic-ai/claude-code`
-3. Open this folder in VS Code (recommended extensions will be suggested)
-4. `cd remotion && npm install`
-
-Python 3 + numpy are needed only for the audio synth script.
-
-## How this repo is organised
-
-Three ideas run the whole thing:
-
-**1. A video is a `VideoDef` in a registry.** Each video exports
-`defineVideo({ id, component, durationInFrames })`. Its product lists it in
-`index.ts`, `shared/engine/registry.ts` collects every product's list, and
-`Root.tsx` turns each entry into a Remotion composition. Nothing else needs editing.
-
-**2. A design language is data.** Palette (by *role* — `accent`, not "coral"), type
-specs, motion profile, depth. Scenes read from it, so the same scene code carries
-any brand. Two videos on this engine should look like different studios made them.
-
-**3. `shared/` is style-agnostic; `products/<name>/` owns the look.** Shared code
-never assumes a palette, font, or format. Anything style-specific — MyBola's phone
-staging, its app UI — lives under its product.
+`remotion/src/shared/` **is the engine** — style-agnostic primitives, no brand:
 
 ```
 remotion/src/
+  index.ts               registers the Remotion root
+  Root.tsx               renders registered videos (or the EmptyEngine placeholder)
   shared/
-    engine/      VideoDef + registry + format presets
-    design/      DesignLanguage type + font loader
-    motion/      easing/springs, reveal kit, transitions  <- the craft layer
-    ui/          generic app chrome (chat, status bar, WhatsApp)
-    narration/   serif layer + legacy font loader
-  products/
-    mybola/
-      design.ts    its DesignLanguage ("warm editorial")
-      brand.ts     cream/ink/coral + wordmark, tagline
-      appTheme.ts  app tokens (from the Flutter source)
-      ui/          ITS device staging (PhoneFrame)
-      videos/      one file per cut, each exporting a VideoDef
-      audio/       per-video music + SFX synth
-      index.ts     this product's video list
+    engine/
+      types.ts           VideoDef, defineVideo, format presets, AudioBrief
+      registry.ts        registerVideos() / allVideos / findVideo() — empty by default
+      audio-prompt.ts    a video's audio brief -> a music-generation prompt (genre-agnostic)
+    design/
+      types.ts           DesignLanguage (palette by ROLE, type, motion profile)
+      fonts.tsx          loads whatever a design language declares
+    motion/              the craft layer: easing/springs, reveal, transitions,
+                         shot (virtual camera), graphic, logo, data, type-kinetic
+    narration/           text primitives
+  scripts/
+    audio-prompt.mjs     CLI: brief -> music-gen prompt
+    qc.mjs               QC gate (banned glyphs, hardcoded hex)
+  craft/                 product-neutral studio doctrine (the quality bar)
 ```
+
+There is **no `products/` in the engine** — a product is something *you* add
+(below) and register. The engine never changes to accept one.
+
+## Setup (once)
+
+1. Node.js 20+ and ffmpeg (`winget install ffmpeg`)
+2. `cd remotion && npm install`
+3. (optional, for making videos with Claude Code) `npm install -g @anthropic-ai/claude-code`
+
+## Boot it empty
+
+```bash
+cd remotion
+npm run studio                          # opens on the EmptyEngine placeholder
+npx remotion compositions src/index.ts  # lists EmptyEngine until you register a video
+```
+
+## Add a product (your brand's videos)
+
+A product lives **outside the engine**, e.g. `src/products/<name>/`, and owns one
+identity. Nothing in `shared/` changes.
+
+1. **A design language** — `design.ts` exporting a `DesignLanguage`: palette by
+   *role* (`accent`, never `"coral"`), type specs, motion profile. Scenes read from
+   it, so the same scene code carries any brand.
+2. **Videos** — `videos/<name>.tsx`, each composed from `shared/motion` and reading
+   colour/font/timing from the design language. Export a `VideoDef`:
+   `defineVideo({ id: "AcmeTeaser", component, durationInFrames, ...LANDSCAPE })`.
+   Ids: letters/digits/`-` only (no underscores). Optionally attach an `audio` brief.
+3. **Register** — in an entry your studio loads, call
+   `registerVideos(myVideos)`. They now appear in the studio and render by id.
 
 Formats: `PORTRAIT` (9:16), `LANDSCAPE` (16:9), `SQUARE`, `CINEMA` (21:9) — spread
 one into `defineVideo`.
 
-## Daily workflow
+## Render
 
 ```bash
-cd remotion
-npm run studio                  # live preview; lists every video, hot-reloads
-npx remotion compositions src/index.ts   # what can I render?
-npm run render:mybola-v4        # -> out/MyBolaV4.mp4 (silent)
-npm run audio:mybola-v4         # -> out/audio/MyBolaV4-{music,sfx}.wav
+npm run render <CompositionId> out/<name>.mp4   # any registered video, by id
+npm run still  <CompositionId> out/frame.png -- --frame=N
+npm run qc                                       # run before every delivered render
 ```
 
-Then mix video + audio (video renders silent; audio is muxed in after):
+## Audio — generated, then aligned to the cut
+
+The engine does **not** synthesize music. It writes a precise **music-generation
+prompt** from a video's `audio` brief; you generate the track in a 3rd-party AI tool
+(ElevenLabs / DaVinci / Suno / Udio), then align it to the cut.
 
 ```bash
-ffmpeg -i out/MyBolaV4.mp4 -i out/audio/MyBolaV4-music.wav -i out/audio/MyBolaV4-sfx.wav \
-  -filter_complex "[1:a][2:a]amix=inputs=2:duration=first:normalize=0[a]" \
-  -map 0:v -map "[a]" -c:v copy -c:a aac out/MyBolaV4-final.mp4
+node scripts/audio-prompt.mjs <brief.ts|brief.json> [--out PROMPT.md]
+# or: npm run audio:prompt <brief.ts|brief.json>
 ```
 
-Any video renders by id: `npm run render <CompositionId> out/<name>.mp4`.
-Outputs are named per-id so videos never overwrite each other.
+The engine is **genre-agnostic** — the sound comes entirely from the brief
+(`beat.sound` > `brief.roleText[role]` > a bare fallback), so calm piano, sports
+EDM, trap, ambient, corporate all work with zero engine edits. The paste-ready
+prompt is kept under 4000 chars. Its **alignment plan** gives the exact frame the
+generated track's payoff must land on.
 
-In another terminal run `claude` to make changes conversationally —
-`remotion/CLAUDE.md` gives it the full context, design rules, and backlog.
+> Alignment + mux (shifting the generated track's payoff onto the frame, then
+> muxing with ffmpeg) is a per-product step — see `remotion/CLAUDE.md`, Audio.
 
-## Adding another video (same product)
+## Make a video with Claude Code (optional)
 
-1. Add `src/products/<product>/videos/<name>.tsx`. Compose from `shared/motion`;
-   read colours/fonts/timing from that product's `design.ts`.
-2. Export a `VideoDef`: `defineVideo({ id: "MyBolaTeaser", component, durationInFrames })`.
-   Ids allow letters/digits/`-` only — no underscores.
-3. List it in that product's `index.ts`.
-4. If it needs a score, add an entry to `VIDEOS` in `audio/make_audio.py`.
+```
+cd remotion && claude
+> /video
+```
 
-It now shows in Studio and renders via `npm run render MyBolaTeaser out/teaser.mp4`.
+Give the brief; it researches, forms a creative direction, builds, runs QC + a cold
+creative-director review, and delivers a cut with a director's statement.
+`remotion/CLAUDE.md` gives it the full engine context and craft rules.
 
-## Adding another product / design language
+## Rules that matter
 
-Create `src/products/<name>/` with its own `design.ts`, `videos/` and `index.ts`,
-then import its `videos` into `shared/engine/registry.ts`. Nothing in other products
-changes. Anything style-specific — device staging, app UI — lives in that folder.
-
-Fonts: only families with woff2 in `remotion/public/fonts/` work (headless Chrome,
-no network). Copy weights from `node_modules/@fontsource/<family>/files/` and name
-them in the design language.
-
-## Rules that matter (Claude Code reads these from remotion/CLAUDE.md)
-
-- **Read `remotion/craft/motion-craft.md`** — the quality bar as concrete rules
-- Never hardcode a hex or font in a scene; ask the design language
-- Whenever a real product's UI is on screen, it must match that product's real
-  source exactly — no invented cards
-- No emoji in compositions (headless Chrome renders blank boxes)
-- **Renders are not bit-reproducible** — the same unchanged code re-rendered gives
-  a different md5 (SSIM ~0.9999). Judge changes by looking at frames, not hashes.
-- MyBola-specific: two-layer rule (coral never inside the phone), phone never moves,
-  copy in Bahasa Malaysia
+- **Read `remotion/craft/motion-craft.md`** — the quality bar as concrete rules.
+- `shared/` never assumes a palette, font, or format — a product owns its look.
+- Never hardcode a hex or font in a scene; ask the design language (`npm run qc`
+  warns on hardcoded hex).
+- No emoji/dingbats/arrows in compositions — headless Chrome renders tofu boxes
+  (`npm run qc` errors on these).
+- **Renders are not bit-reproducible** — the same code re-rendered gives a
+  different md5 (SSIM ~0.9999). Judge changes by looking at frames, not hashes.
 
 ## Docs
 
-- `remotion/craft/motion-craft.md` — the universal craft bar: timing, type,
-  colour, depth, camera, transitions, and the critique loop. Product-neutral.
-- `remotion/src/products/mybola/NOTES.md` — MyBola's own reference analysis and
-  polish log (an example of how each product keeps its specifics with itself)
+- `remotion/CLAUDE.md` — engine architecture, commands, the full audio pipeline
+- `remotion/craft/motion-craft.md` — the universal craft bar (product-neutral)
 - `.claude/skills/video/SKILL.md` — the `/video` studio workflow
-- `.claude/agents/creative-director.md` — the cold-review agent
+- `.claude/agents/` — the review + sound-design agents

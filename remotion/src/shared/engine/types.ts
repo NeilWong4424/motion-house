@@ -7,23 +7,47 @@ import React from "react";
 // like and WHERE its beats fall (in frames); the shared prompt engine
 // (engine/audio-prompt.ts) turns this into a tool-agnostic music-generation prompt
 // to feed a 3rd-party AI generator (ElevenLabs, DaVinci, Suno, Udio…). The
-// returned track is then aligned to `drop` frame-exact. This type carries NO
+// returned track is then aligned to the payoff frame-exact. This type carries NO
 // synthesis — only intent + timing.
+//
+// THE BRIEF OWNS THE SOUND, THE ENGINE ONLY FORMATS. The engine is genre-agnostic:
+// it bakes in no register (no "calm" vs "energetic"). Whatever a beat should sound
+// like — sports EDM, felt piano, trap, horror drone, folk, corporate bed — the
+// PRODUCT says so, per beat or per role. Adding a new genre never touches the
+// engine. So it supports every kind of video and every kind of track.
 
-/** One structural beat of the cut, in frames, with the musical role it plays. */
+/**
+ * The canonical arrangement roles. These are SUGGESTIONS with a shared meaning
+ * the engine understands (e.g. exactly one `payoff` is the alignment target); a
+ * product may also use any other string for song-form structure ("verse",
+ * "chorus", "breakdown", "loop"). `payoff` replaces the old promo-specific "drop"
+ * name so calm films aren't described as "dropping".
+ */
+export type AudioRole =
+  | "intro" // the opening — however the genre opens
+  | "build" // developing / rising
+  | "riser" // tension gathering into the payoff
+  | "payoff" // THE turn: the single most important musical moment (the align target)
+  | "sustain" // holding after the payoff
+  | "outro"; // the ending
+
+/** One structural beat of the cut, in frames. */
 export type AudioBeat = {
   /** Frame this beat starts on (from the composition's own scene table). */
   frame: number;
-  /** What the music should be doing here. Drives the prompt's structure list. */
-  role:
-    | "intro" // sparse, anticipatory — before the energy
-    | "build" // energy climbing
-    | "riser" // tension / pull-back-then-rise into the drop
-    | "drop" // THE payoff — the biggest, most euphoric moment (exactly one)
-    | "sustain" // hold the energy after the drop
-    | "outro"; // resolve; end on a hit
-  /** Optional human label for the prompt table (e.g. "ColdOpen (48 NATIONS)"). */
+  /**
+   * The beat's role. A canonical `AudioRole` (the engine treats `payoff` as the
+   * alignment target) OR any product-defined string for bespoke song structure.
+   */
+  role: AudioRole | (string & {});
+  /** Optional human label for the reference table (e.g. "ColdOpen (48 NATIONS)"). */
   label?: string;
+  /**
+   * What the MUSIC does here, in this beat's own words — the product's genre voice.
+   * Highest precedence in the prompt's structure list. Use this to say exactly
+   * what a beat sounds like ("808s enter, hats stutter"; "a lone cello, rubato").
+   */
+  sound?: string;
 };
 
 /** Declarative sound direction the prompt engine reads. No synthesis here. */
@@ -34,10 +58,18 @@ export type AudioBrief = {
   instrumentation: string;
   /** Concrete tempo/key so the track is consistent and nudgeable to a grid. */
   tempoKey: string;
-  /** The earworm: describe the motif that repeats and lifts at the drop. */
+  /** The earworm: describe the motif / main musical idea. */
   hook: string;
-  /** The cut's beats in frames, with roles. The engine derives proportions. */
+  /** The cut's beats in frames. The engine derives proportions from them. */
   beats: AudioBeat[];
+  /**
+   * Default per-role descriptions in THIS product's genre voice, used when a beat
+   * has no `sound` of its own. The product owns the register here — the engine
+   * ships none. e.g. { build: "add one voice at a time, no percussion", ... }.
+   */
+  roleText?: Partial<Record<string, string>>;
+  /** The dynamics line (loud/soft, headroom). Product-specific; has a generic default. */
+  dynamics?: string;
   /** Frame the closing decisive hit / stinger lands on (e.g. a logo). */
   stingerFrame?: number;
   /** What to exclude — the negative prompt (vocals, fade-out, lo-fi…). */
@@ -52,7 +84,7 @@ export type VideoDef = {
   /**
    * Composition id — also the render/still argument and default output name.
    * Remotion allows only a-z, A-Z, 0-9, CJK and `-`. No underscores, spaces, or
-   * dots; PascalCase reads best (e.g. "MyBolaV4", "AcmeTeaser").
+   * dots; PascalCase reads best (e.g. "AcmeLaunch", "AcmeTeaser").
    */
   id: string;
   component: React.FC;

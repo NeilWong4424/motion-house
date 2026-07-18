@@ -5,7 +5,7 @@
 // brief (in VideoDef) + its real frame timings into a tool-agnostic music-
 // generation PROMPT plus an ALIGNMENT PLAN, to feed a 3rd-party AI generator
 // (ElevenLabs, DaVinci, Suno, Udio…). The returned track is then aligned so its
-// drop lands on the cut's `drop` frame.
+// biggest-energy moment lands on the cut's `payoff` frame.
 //
 // Pure + dependency-free (no React, no Remotion, no fs) so it runs anywhere: a
 // CLI, a test, or the studio. Given the same VideoDef it always emits the same
@@ -13,14 +13,33 @@
 
 import type { AudioBeat, AudioBrief, VideoDef } from "./types";
 
-const ROLE_TEXT: Record<AudioBeat["role"], string> = {
-  intro: "sparse and tense — almost no drums; leave space, anticipatory",
-  build: "energy climbing — kick/hats in, stabs, momentum",
-  riser: "pull the drums back, then a rising riser (sweep + rising pitch + snare roll) into the drop",
-  drop: "THE DROP — everything hits: full drums, the hook at its highest/brightest, the single most euphoric moment",
-  sustain: "hold the energy — hook continues, driving",
-  outro: "resolve and END ON ONE DECISIVE HIT (no fade-out)",
+/** Hard cap for the paste-ready prompt block (generator style boxes are small). */
+export const PROMPT_CHAR_LIMIT = 4000;
+
+// The engine is GENRE-AGNOSTIC. It bakes in no register. What a beat sounds like
+// comes from the PRODUCT, in this precedence:
+//   1. beat.sound            — the beat's own words (highest)
+//   2. brief.roleText[role]  — the product's per-role default, in its genre voice
+//   3. GENERIC_ROLE fallback — role name only, so a bare brief still renders
+// This minimal fallback is intentionally register-free ("the payoff", not "the
+// drop / full drums"), so it never contradicts a calm OR an energetic cut. To
+// sound good, a product supplies (1) or (2) — the engine never invents a genre.
+const GENERIC_ROLE: Record<string, string> = {
+  intro: "the opening",
+  build: "developing / rising",
+  riser: "tension gathering into the payoff",
+  payoff: "the payoff — the single most important musical moment",
+  sustain: "holding after the payoff",
+  outro: "the ending",
 };
+
+/** The one payoff beat is the alignment target. `drop` is a legacy alias. */
+const PAYOFF_ROLES = new Set(["payoff", "drop"]);
+
+/** Resolve a beat's structure text: beat.sound > brief.roleText > generic. */
+function beatText(beat: AudioBeat, brief: AudioBrief): string {
+  return beat.sound ?? brief.roleText?.[beat.role] ?? GENERIC_ROLE[beat.role] ?? beat.role;
+}
 
 const fmtTime = (s: number): string => `${s.toFixed(2)}s`;
 
@@ -44,120 +63,139 @@ export function sections(video: VideoDef): Section[] {
   });
 }
 
-/** The one drop beat (the payoff), or null if the brief declares none. */
-export function dropSection(video: VideoDef): Section | null {
-  return sections(video).find((s) => s.beat.role === "drop") ?? null;
+/** The payoff beat (the alignment target), or null if the brief declares none. */
+export function payoffSection(video: VideoDef): Section | null {
+  return sections(video).find((s) => PAYOFF_ROLES.has(s.beat.role)) ?? null;
 }
 
 /**
- * Build the full music-generation prompt + alignment plan for a video, as a
- * markdown string ready to write to the product's audio/PROMPT.md.
- * Throws if the video has no audio brief (nothing to score).
+ * The paste-ready prompt block: the ONLY text a generator sees. Self-contained
+ * and kept under PROMPT_CHAR_LIMIT. Collapses consecutive same-role beats so the
+ * structure list stays compact (the old per-beat list bloated long cuts).
  */
-export function buildPrompt(video: VideoDef): string {
+export function promptBlock(video: VideoDef): string {
   const brief = video.audio;
   if (!brief) {
     throw new Error(`Video "${video.id}" has no audio brief; nothing to generate.`);
   }
   const fps = video.fps ?? 30;
   const total = video.durationInFrames / fps;
+  const tail = 3;
+
+  // Collapse runs of the same role+text into one % band so the list stays compact.
   const secs = sections(video);
-  const drop = dropSection(video);
-  const tail = 3; // seconds of tail we ask the generator to overshoot by
+  const bands: { role: string; text: string; a: number; b: number }[] = [];
+  for (const s of secs) {
+    const a = Math.round((s.start / total) * 100);
+    const b = Math.round((s.end / total) * 100);
+    const text = beatText(s.beat, brief);
+    const last = bands[bands.length - 1];
+    // merge only when both role AND text match (per-beat `sound` stays distinct)
+    if (last && last.role === s.beat.role && last.text === text) last.b = b;
+    else bands.push({ role: s.beat.role, text, a, b });
+  }
+  const structure = bands
+    .map((x) => `- ${x.a}-${x.b}%, ${cap(x.role)}: ${x.text}`)
+    .join("\n");
+
+  const exclude =
+    brief.exclude ??
+    "No vocals, no lyrics. No lo-fi. No fade-out ending. No genre drift mid-track.";
+
+  const dyn =
+    brief.dynamics ??
+    "Wide dynamic range: a genuinely sparse intro so the payoff lands with contrast. Leave headroom, do not brickwall.";
+
+  const block = `Instrumental music track for a ${fmtTime(total)} film. Structure to these proportions of the track:
+${structure}
+
+STYLE: ${brief.style}
+INSTRUMENTATION: ${brief.instrumentation}
+TEMPO & KEY: ${brief.tempoKey}
+HOOK: ${brief.hook}
+DYNAMICS: ${dyn}
+DO NOT INCLUDE: ${exclude}
+LENGTH: at least ${Math.ceil(total + tail)}s (instrumental).`;
+
+  if (block.length > PROMPT_CHAR_LIMIT) {
+    throw new Error(
+      `Prompt for "${video.id}" is ${block.length} chars, over the ${PROMPT_CHAR_LIMIT} limit. ` +
+        `Shorten the brief's style/instrumentation/hook/exclude fields.`,
+    );
+  }
+  return block;
+}
+
+/**
+ * The full PROMPT.md file: the paste-ready block FIRST (what you give the
+ * generator), then reference material (cut table + alignment plan) that is NOT
+ * part of the prompt. Throws if the video has no audio brief.
+ */
+export function buildPrompt(video: VideoDef): string {
+  const brief = video.audio!; // promptBlock throws if missing
+  const fps = video.fps ?? 30;
+  const total = video.durationInFrames / fps;
+  const secs = sections(video);
+  const payoff = payoffSection(video);
+
+  const block = promptBlock(video);
 
   const cutTable = secs
     .map((s) => {
       const label = s.beat.label ?? s.beat.role;
-      const range = `${fmtTime(s.start)}–${fmtTime(s.end)}`;
-      return `| ${range} | ${label} | **${s.beat.role}** — ${ROLE_TEXT[s.beat.role]} |`;
-    })
-    .join("\n");
-
-  const structure = secs
-    .map((s) => {
-      const a = Math.round((s.start / total) * 100);
-      const b = Math.round((s.end / total) * 100);
-      return `> - **${a}–${b}% — ${cap(s.beat.role)}:** ${ROLE_TEXT[s.beat.role]}.`;
+      return `| ${fmtTime(s.start)}–${fmtTime(s.end)} | ${label} | ${s.beat.role} |`;
     })
     .join("\n");
 
   const stinger = brief.stingerFrame != null ? brief.stingerFrame / fps : null;
-
   const alignment = [
-    drop && `- \`drop_at\` = **${fmtTime(drop.start)}** (frame ${drop.beat.frame}) — the track's drop/biggest-energy moment must land here.`,
+    payoff && `- \`payoff_at\` = **${fmtTime(payoff.start)}** (frame ${payoff.beat.frame}) — the track's biggest-energy moment must land here.`,
     (() => {
       const r = secs.find((s) => s.beat.role === "riser");
-      return r && `- \`riser_from\` = **${fmtTime(r.start)}** (frame ${r.beat.frame}) — the track's riser/tension should begin here.`;
+      return r && `- \`riser_from\` = **${fmtTime(r.start)}** (frame ${r.beat.frame}) — riser/tension begins here.`;
     })(),
     (() => {
       const o = secs.find((s) => s.beat.role === "outro");
       return o && `- \`outro_at\` = **${fmtTime(o.start)}** (frame ${o.beat.frame}) — resolve into the outro here.`;
     })(),
-    stinger != null && `- \`stinger_at\` = **${fmtTime(stinger)}** (frame ${brief.stingerFrame}) — the closing decisive hit lands here.`,
-    `- \`total\` = **${fmtTime(total)}** cut; aligned stem should run **~${fmtTime(total + 0.5)}** (cover + tail), never end early.`,
+    stinger != null && `- \`stinger_at\` = **${fmtTime(stinger)}** (frame ${brief.stingerFrame}) — the closing hit lands here.`,
+    `- \`total\` = **${fmtTime(total)}** cut; aligned stem ~${fmtTime(total + 0.5)} (cover + tail), never end early.`,
   ]
     .filter(Boolean)
     .join("\n");
 
   return `# Music-generation prompt — ${video.id}
 
-> GENERATED by the shared prompt engine (\`engine/audio-prompt.ts\`) from this
-> video's declarative \`audio\` brief + its real frame timings. Do not hand-edit;
-> change the brief in the product's video and re-run \`npm run audio:prompt ${video.id}\`.
+> GENERATED by \`engine/audio-prompt.ts\` from this video's \`audio\` brief + real
+> frame timings. The engine is genre-agnostic — the sound below is the product's
+> own. Do not hand-edit; change the brief and re-run \`npm run audio:prompt ${video.id}\`.
 
-Video is **locked** (${video.durationInFrames}f / ${fmtTime(total)} @ ${fps}fps). Generate the
-music with a 3rd-party AI tool (ElevenLabs / DaVinci / Suno / Udio), then align it
-onto the cut per the ALIGNMENT PLAN below.
+Locked cut: ${video.durationInFrames}f / ${fmtTime(total)} @ ${fps}fps.
 
-The cut we're scoring:
+## >> PASTE THIS INTO THE GENERATOR (${block.length}/${PROMPT_CHAR_LIMIT} chars)
 
-| Time | Beat | Music role |
-|------|------|-----------|
+\`\`\`
+${block}
+\`\`\`
+
+---
+
+## Reference — NOT part of the prompt (for alignment/QC only)
+
+**The cut we're scoring:**
+
+| Time | Beat | Role |
+|------|------|------|
 ${cutTable}
 
----
-
-## THE PROMPT (tool-agnostic)
-
-**Style (one line):**
-> ${brief.style}
-
-**Instrumentation:**
-> ${brief.instrumentation}
-
-**Tempo & key:**
-> ${brief.tempoKey}
-
-**Structure (scale these proportions to a ~${Math.ceil(total + tail)}s render):**
-${structure}
-
-**The hook:**
-> ${brief.hook}
-
-**Dynamics:**
-> Wide dynamic range. The intro must be genuinely quiet and sparse so the drop
-> lands with maximum contrast. Leave headroom — do NOT master to a brickwall.
-
-**Negative prompt (exclude):**
-> ${brief.exclude ?? "No vocals, no lyrics. No lo-fi. No fade-out ending (end on a hit). No genre drift mid-track."}
-
-**Generation params:**
-> Instrumental. Target length **≥ ${Math.ceil(total + tail)}s** (cut is ${fmtTime(total)} + tail).
-> If the tool supports section tags, tag the sections above. Generate a few
-> variations; pick the one whose drop is most euphoric and whose intro is most sparse.
-
----
-
-## ALIGNMENT PLAN
-
-Target timestamps in OUR cut (seconds):
+**Alignment plan** (target timestamps in OUR cut):
 
 ${alignment}
 
-**Alignment** is done by \`make_audio.py --align <track>\` (per product): it finds the
-returned track's drop, time-shifts it onto \`drop_at\` (never pitch-shifts), and
-pads/trims to cover the full cut. Then mux + verify the sound-designer's numeric
-gates (drop within ~0.1s of \`drop_at\`, LRA ≥ 5 LU, True Peak ≤ −1.5 dBTP).
+Alignment is done by \`make_audio.py --align <track>\`: it finds the returned
+track's biggest-energy moment, time-shifts it onto \`payoff_at\` (never
+pitch-shifts), and pads/trims to cover the full cut. Then mux + verify the
+sound-designer's numeric gates.
 ${brief.sfxNotes ? `\n**SFX stay synthesized** (not generated): ${brief.sfxNotes}` : ""}
 `;
 }

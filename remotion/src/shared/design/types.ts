@@ -69,7 +69,7 @@ export type Grain = {
 };
 
 export type DesignLanguage = {
-  /** Stable id, e.g. "mybola-editorial". */
+  /** Stable id, e.g. "acme-editorial". */
   id: string;
   /** One line naming the feel — the brief this design answers. */
   feel: string;
