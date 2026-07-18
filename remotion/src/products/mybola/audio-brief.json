@@ -1,0 +1,31 @@
+{
+  "id": "MyBolaLaunch",
+  "durationInFrames": 1740,
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "audio": {
+    "style": "Warm, confident product-launch bed — felt piano + soft analog synth pad, gentle and hopeful, instrumental. Claude-launch calm, never busy.",
+    "instrumentation": "Felt/soft piano, warm analog pad, light sub-bass, sparse mallet accents, tasteful airy texture. No drums until the payoff, then a soft kick + brushed pulse only.",
+    "tempoKey": "72 BPM, A major",
+    "hook": "A simple, memorable 4-note rising piano motif that returns at the payoff and resolves on the end card.",
+    "beats": [
+      { "frame": 0, "role": "intro", "label": "Cold open", "sound": "One held felt-piano chord, air, space. The promise stated." },
+      { "frame": 120, "role": "build", "label": "Admin AI", "sound": "Motif enters on piano, pad swells softly under it." },
+      { "frame": 390, "role": "build", "label": "Inputs" },
+      { "frame": 540, "role": "build", "label": "PDF roster", "sound": "Add a light mallet accent as rows register." },
+      { "frame": 720, "role": "riser", "label": "WhatsApp core", "sound": "Gentle rise; warmth grows as the customer is helped end-to-end." },
+      { "frame": 1470, "role": "payoff", "label": "Dashboard payoff", "sound": "The motif returns full, a soft kick + brushed pulse arrive, hopeful lift." },
+      { "frame": 1590, "role": "outro", "label": "End card", "sound": "Resolve the motif on a warm major chord; let it ring out." }
+    ],
+    "roleText": {
+      "build": "add one voice at a time, keep it sparse and unhurried",
+      "riser": "swell warmth and register, no percussion yet",
+      "sustain": "hold the warmth, let the picture breathe"
+    },
+    "dynamics": "A quiet bed with generous headroom — never near clipping. The payoff is a gentle lift, not a drop.",
+    "stingerFrame": 1598,
+    "exclude": "vocals, lyrics, hard EDM drops, aggressive drums, lo-fi hiss, fade-out ending",
+    "sfxNotes": "Soft UI tap on each chat send; a subtle switch-click when Auto-balas flips off; a light chime when the receipt PDF arrives. All low, on-frame."
+  }
+}
