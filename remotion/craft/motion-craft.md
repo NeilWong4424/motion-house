@@ -137,12 +137,93 @@ write that breakdown as a shot list.
 
 ## Transitions
 
-- **Pick one or two per video.** Six transition types is a showreel, not a film.
+**The golden-standard test is that the viewer never notices the transition.** If
+they think "nice transition," it already failed the top bar. A transition is not
+an effect — it is the *answer* to the question the viewer is silently asking:
+"how does this next thing relate to what I was just looking at?" There are only
+three honest answers, and each has its move:
+
+1. **"This IS that, transformed" → a continuity morph (match-cut).** The strongest
+   transition there is. The on-screen element doesn't cut away — it *becomes* the
+   next thing (a headline shrinks into a card; a bubble lands as the first chat
+   message). Use `shared/motion/morph.tsx` (`MorphInto`, `lerpRect`).
+2. **"Now, something different" → a hard cut, or a `DipTo` at a chapter break.**
+   When the scenes aren't the same object, don't fake continuity — cut. Dip
+   through black only at a real structural change, and rarely (once or twice a film).
+3. **"Meanwhile / and also" → a `Push`.** Directional: left = forward, right = back.
+   Weaker for story; fine for parallel lists.
+
+### The priority order (Walter Murch's rule — memorise it)
+
+Emotion (51%) **>** story **>** rhythm **>** eye-trace **>** screen position **>**
+spatial continuity. Read it twice: *emotion outranks everything, and technical
+continuity is LAST.* Cut on the feeling and the beat first; clean up the geometry
+after. Amateurs build it backwards — they nail the pixel seam and hope feeling
+shows up.
+
+### The laws every transition obeys
+
+- **Motivated, not decorative.** Every transition needs a reason tied to meaning.
+  A spin/glitch/whip that means nothing is the fastest tell of cheap work.
+- **Keep one anchor across the seam (eye-trace).** Know where the viewer's eyes
+  are before the cut; put the important thing in the next shot at that same spot,
+  so the eye never has to re-hunt. A morph keeps the anchor literally; a cut should
+  respect it.
+- **Cut/morph ON action, not in stillness.** Movement hides the join (2001's
+  bone → spaceship). A morph is just a match-cut with the in-between frames drawn.
+- **NO DEAD FRAME.** The worst transition error is a moment where the screen is
+  briefly bare, black, or ambiguous — the eye reads any gap as a mistake. A morph
+  from a separate `<Sequence>` that remounts, or a montage that mounts one frame
+  late, causes a one-frame blink. Fix by keeping the transition ONE continuous
+  component and by underlapping the next scene so it is already painting.
+- **END STATE == NEXT SCENE'S START STATE, to the pixel.** This is the law that
+  separates "clean" from "golden." If the transition lands "close," the eye
+  catches the snap. Do NOT hand-build a copy of the next scene to land on — its
+  layout WILL drift (wrong line-height, an uncounted wrap, a forgotten bezel
+  offset). Instead **dissolve into the REAL next-scene component frozen at its
+  first frame** (`MorphInto`'s `next`), so end == start by construction. Verify it
+  (see below) — do not eyeball it.
+- **Same coordinate space both sides.** The transition and the next scene must
+  place their shared subject IDENTICALLY (same origin, same transform-origin,
+  same scale, bezel/padding accounted for). A phone positioned absolute-from-
+  top-left in the transition and flex-centred in the next scene will offset EVERY
+  element. Share one positioning wrapper.
+- **Pace it to the story, not the clock.** A calm, editorial film lets the change
+  feel like the film *deciding* to move on — hold the outgoing state a beat before
+  it transforms. A fast demo can cut harder. Match transition speed to register.
+- **Sound turns the corner with picture (J-cut).** Land the visual change on a
+  musical beat, and let the next scene's audio arrive a few frames BEFORE its
+  picture — you hear it coming, so the change feels anticipated, not abrupt. A
+  transition mixed as an afterthought never reaches the bar. Wire the transition
+  frame to a `beat` in the `AudioBrief`.
+
+### Restraint
+
+- **One transition vocabulary per film** (two or three moves, used consistently)
+  plus ONE signature moment. Six transition types is a showreel, not a film.
+  Consistency reads as authored; variety reads as a template.
 - **Hard cuts are underrated.** Cut on the beat and the edit disappears. Most
-  transitions between beats of the same idea should be cuts.
-- **`DipTo` for chapter breaks** — a real structural pause, not decoration.
-- **`Push` for narrative direction** — left = forward, right = back. Be consistent.
-- Cross-dissolves say "time passed". Don't use one just because a cut felt abrupt.
+  transitions between beats of the same idea should be plain cuts.
+- Cross-dissolves say "time passed." Don't use one just because a cut felt abrupt.
+
+### Verify the seam (do not eyeball it)
+
+For any morph/continuity cut, prove end == start with the rendered mp4:
+
+```
+# extract the last transition frame and the first next-scene frame
+ffmpeg -y -i out/<Id>.mp4 -vf "select=eq(n\,<LAST>)"  -frames:v 1 a.png
+ffmpeg -y -i out/<Id>.mp4 -vf "select=eq(n\,<FIRST>)" -frames:v 1 b.png
+# amplified difference — anything that lights up (except elements that LEGIT
+# change, e.g. an omnibar starting to type) is drift to fix
+ffmpeg -y -i a.png -i b.png -filter_complex "blend=all_mode=difference,eq=contrast=8" diff.png
+# PSNR: >40 dB = matched; ~21 dB = visible drift; ~69 dB = pixel-identical
+ffmpeg -i a.png -i b.png -lavfi psnr -f null -
+```
+
+Also scan brightness across the seam — a dip/spike is a blink:
+`ffmpeg -i out/<Id>.mp4 -vf "select='between(n,<A>,<B>)',signalstats,metadata=print:key=lavfi.signalstats.YAVG" -f null -`
+(flat YAVG across the cut = no blink).
 
 ---
 
@@ -210,5 +291,9 @@ never as evidence something changed.
 - [ ] Accent used sparingly
 - [ ] Composition balanced (no top-heavy clusters over dead space)
 - [ ] One or two transition types, used consistently
+- [ ] Every transition motivated by story; one anchor held across each seam
+- [ ] No dead/black/bare frame at any cut (brightness flat across the seam)
+- [ ] Continuity morphs: last transition frame == next scene's first frame
+      (PSNR-verified, not eyeballed)
 - [ ] Audio covers full length, ≈ −21 dB, SFX on-frame
 - [ ] Frames actually looked at, including mid-motion

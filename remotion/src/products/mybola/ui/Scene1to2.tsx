@@ -126,6 +126,22 @@ const useGeometry = () => {
   return { width, height, phoneLeft, phoneTop, phoneW, phoneH, q1, a1, q2, a2 };
 };
 
+// ---- PhoneStage: the ONE phone-placement wrapper both parts share ----
+// The seam only stays pixel-locked if the transition and the next scene place the
+// phone IDENTICALLY. Having two hand-written copies of the wrapper is how drift
+// creeps back (edit one, forget the other). This is the single source of that
+// placement: absolute at the bezel-corrected OUTER origin, scaled from top-left.
+const PhoneStage: React.FC<{ children: React.ReactNode; opacity?: number }> = ({ children, opacity = 1 }) => {
+  const g = useGeometry();
+  return (
+    <div style={{ position: "absolute", left: g.phoneLeft, top: g.phoneTop, opacity }}>
+      <div style={{ transform: `scale(${PHONE_FILL})`, transformOrigin: "top left" }}>
+        <PhoneFrame time="9:12">{children}</PhoneFrame>
+      </div>
+    </div>
+  );
+};
+
 // Render one bubble from a Rect. `mine` = owner (secondary, points bottom-right);
 // else AI (primary tint, points bottom-left). Two text layers (hook phrasing and
 // full in-phone text) are stacked and crossfaded via `textMix` (0 = hook, 1 =
@@ -227,25 +243,22 @@ const HookMorphPart: React.FC = () => {
 
       {/* phone chrome fades up during the morph. Its transcript is the REAL montage
           frozen at frame 0, revealed by `settle` so the seam is a dissolve into the
-          exact scene-2 layout, not a cut. Identical placement to MontagePart. */}
-      <div style={{ position: "absolute", left: g.phoneLeft, top: g.phoneTop, opacity: chrome }}>
-        <div style={{ transform: `scale(${PHONE_FILL})`, transformOrigin: "top left" }}>
-          <PhoneFrame time="9:12">
-            {/* empty chrome (omnibar only) UNDER the settling montage, so the phone
-                is never bare while the montage is still transparent */}
-            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: MYBOLA.black, paddingTop: 44 }}>
-              <div style={{ flex: 1 }} />
-              <div style={{ padding: 12, paddingBottom: 16 }}>
-                <ChatOmnibar value="" />
-              </div>
-            </div>
-            {/* the real scene-2 transcript, frozen at its first frame */}
-            <div style={{ position: "absolute", inset: 0, opacity: settle }}>
-              <ChatMontage startStep={1} delay={9999} />
-            </div>
-          </PhoneFrame>
+          exact scene-2 layout, not a cut. Uses the SHARED PhoneStage so placement
+          is identical to MontagePart by construction. */}
+      <PhoneStage opacity={chrome}>
+        {/* empty chrome (omnibar only) UNDER the settling montage, so the phone
+            is never bare while the montage is still transparent */}
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: MYBOLA.black, paddingTop: 44 }}>
+          <div style={{ flex: 1 }} />
+          <div style={{ padding: 12, paddingBottom: 16 }}>
+            <ChatOmnibar value="" />
+          </div>
         </div>
-      </div>
+        {/* the real scene-2 transcript, frozen at its first frame */}
+        <div style={{ position: "absolute", inset: 0, opacity: settle }}>
+          <ChatMontage startStep={1} delay={9999} />
+        </div>
+      </PhoneStage>
 
       {/* the SAME two bubbles the whole time; wording crossfades via textMix,
           captions fade in via capMix, and the whole pair dissolves out (1 - settle)
@@ -260,19 +273,12 @@ const HookMorphPart: React.FC = () => {
 // `startAt` freezes the montage clock for its first `startAt` frames so it can be
 // mounted early (underlapping the morph) without advancing.
 const MontagePart: React.FC<{ startAt?: number }> = ({ startAt = 0 }) => {
-  const g = useGeometry();
-  // IDENTICAL phone placement to HookMorphPart: absolute at the OUTER origin,
-  // scaled from top-left. Any deviation (e.g. flex-centre / centre origin) shifts
-  // every element and breaks the seam.
+  // IDENTICAL phone placement to HookMorphPart — guaranteed by sharing PhoneStage.
   return (
     <AbsoluteFill style={{ background: MYBOLA.black }}>
-      <div style={{ position: "absolute", left: g.phoneLeft, top: g.phoneTop }}>
-        <div style={{ transform: `scale(${PHONE_FILL})`, transformOrigin: "top left" }}>
-          <PhoneFrame time="9:12">
-            <ChatMontage startStep={1} delay={startAt} />
-          </PhoneFrame>
-        </div>
-      </div>
+      <PhoneStage>
+        <ChatMontage startStep={1} delay={startAt} />
+      </PhoneStage>
     </AbsoluteFill>
   );
 };
