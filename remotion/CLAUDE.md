@@ -73,8 +73,11 @@ a registry; adding one never touches `Root.tsx`.
   `node_modules/@fontsource/<family>/files/` (installed: Inter, Playfair Display,
   Plus Jakarta Sans). No network at render time, so fonts must be local.
 - `craft/` — **product-neutral studio doctrine only.** `motion-craft.md` (the
-  universal flagship — read before building) plus genre chapters: `kinetic-type`,
-  `data-motion`, `broadcast-energy`, `logo-resolve`, `sound-design`, `delivery`.
+  universal flagship — read before building) plus genre chapters:
+  `continuous-world` (one world + a moving camera, the Arc/Family spatial register),
+  `staged-composition` (composed two-device beats, the Cowork product-demo register),
+  `kinetic-type`, `data-motion`, `broadcast-energy`, `logo-resolve`, `sound-design`,
+  `delivery`.
   Product-specific analysis (a product's reference film, measured numbers, polish
   log) lives in that product's own `NOTES.md`, never here.
 

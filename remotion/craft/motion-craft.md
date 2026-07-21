@@ -6,6 +6,12 @@ building a video; check against it before declaring one done. **This is the
 universal core — the flagship.** Genre chapters in this folder deepen it for a
 specific kind of film; read the one that matches what you're building:
 
+- `continuous-world.md` — one world + a moving camera + objects that persist
+  (the Arc/Family spatial register; changes the *unit of composition* from
+  "scenes you glue" to "one world the camera navigates")
+- `staged-composition.md` — composed two-device beats (phone anchor + one
+  desktop), depth + soft shadows, hard cuts between conversation and watch-the-work
+  (the Cowork product-demo register)
 - `kinetic-type.md` — title sequences, big-type films (type as motion)
 - `data-motion.md` — numbers and charts that arrive
 - `broadcast-energy.md` — the high-energy / esports register (rhythm, shapes)
@@ -99,6 +105,16 @@ percent of the base colour. The viewer should feel the depth, not see the gradie
 ---
 
 ## Camera (运镜) and shot breakdown (分镜)
+
+> **Two registers.** This section is the *held-frame* register (Apple/Claude bar):
+> the film is a set of scenes, mostly static framings, joined by cuts. There is a
+> second register — one persistent world navigated by a single continuous camera,
+> objects transforming in place instead of scenes cutting (the Arc/Family look).
+> If the story is genuinely spatial (overview→detail, "watch this expand"), read
+> `continuous-world.md` — it supersedes the "one static framing per scene" and
+> "two or three framings per film" defaults below with its own discipline. The
+> restraint intent (*confidence is holding*) is identical in both; only the unit
+> of composition differs. Everything else on this page holds in both.
 
 **A scene is not one static wide take.** The single biggest quality gap in a demo
 film is showing one unbroken 10-second wide shot while something slowly drifts.

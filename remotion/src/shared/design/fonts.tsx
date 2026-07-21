@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { continueRender, delayRender, staticFile } from "remotion";
+import { loadFont } from "@remotion/fonts";
+import { staticFile } from "remotion";
 import type { DesignLanguage, FontSpec } from "./types";
 import { fontsOf } from "./types";
 
@@ -7,8 +7,9 @@ import { fontsOf } from "./types";
 // Font loading — driven by whatever a design language declares.
 // =============================================================================
 // Remotion renders in headless Chrome with no network, so fonts must be local
-// woff2 files under public/fonts/, loaded via FontFace before the first frame is
-// captured. delayRender holds the render until they're ready; without it, frames
+// woff2 files under public/fonts/, loaded before the first frame is captured.
+// `@remotion/fonts` loadFont() registers the FontFace AND holds the render
+// (delayRender/continueRender) until it's ready — without that gate, frames
 // render in the fallback face.
 //
 // Adding a family:
@@ -24,33 +25,29 @@ const loaded = new Set<string>();
 const keyOf = (spec: FontSpec): string =>
   `${spec.family}:${Object.keys(spec.weights).sort().join(",")}`;
 
-const loadSpecs = async (specs: FontSpec[]): Promise<void> => {
-  await Promise.all(
-    specs.flatMap((spec) =>
-      Object.entries(spec.weights).map(async ([weight, file]) => {
-        const face = new FontFace(spec.family, `url(${staticFile(`fonts/${file}`)})`, { weight });
-        document.fonts.add(await face.load());
-      })
-    )
-  );
-};
-
 /**
  * Load an explicit set of font specs. Idempotent across a render: each family is
- * fetched once, and later callers reuse the cached faces.
+ * loaded once (dedup by family+weights), and later callers reuse the cached
+ * faces. loadFont() self-gates the render via delayRender, so no manual handle
+ * bookkeeping is needed here.
  */
 export const useFontSpecs = (specs: FontSpec[]): void => {
-  const pending = specs.filter((s) => !loaded.has(keyOf(s)));
-  const [handle] = useState(() => (pending.length ? delayRender(`fonts:${pending.map(keyOf).join("|")}`) : null));
-  if (pending.length && handle !== null) {
-    pending.forEach((s) => loaded.add(keyOf(s)));
-    loadSpecs(pending)
-      .then(() => continueRender(handle))
-      .catch((err) => {
-        // Surface the failure instead of silently rendering the fallback face.
-        pending.forEach((s) => loaded.delete(keyOf(s)));
+  for (const spec of specs) {
+    const key = keyOf(spec);
+    if (loaded.has(key)) continue;
+    loaded.add(key);
+    for (const [weight, file] of Object.entries(spec.weights)) {
+      loadFont({
+        family: spec.family,
+        url: staticFile(`fonts/${file}`),
+        weight,
+      }).catch((err) => {
+        // Surface the failure instead of silently rendering the fallback face,
+        // and allow a retry on the next render pass.
+        loaded.delete(key);
         throw err;
       });
+    }
   }
 };
 
